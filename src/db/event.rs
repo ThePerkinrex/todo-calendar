@@ -20,7 +20,7 @@ db_macros::record_with_data! {
 db_macros::record_with_data! {
     #[data(derive(Debug, Serialize, Deserialize))]
     #[whole(derive(Debug, FromRow, Serialize, Deserialize))]
-    #[db(DbCreate, DbReadSingle, DbReadAll(order_by(name)), DbUpdate, DbDelete)]
+    #[db(DbCreate, DbReadSingle, DbReadAll(order_by(start)), DbUpdate, DbDelete)]
     pub struct Event {
         id:
             #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>To-dos</title>
+	<link rel="stylesheet" href="/index.css">
+</head>
+<body>
+	<div id="courses">
+		<h3>Courses</h3>
+		<template id="course-template">
+			<div class="course">
+				<div class="color-block"></div>
+				<span class="course-name"></span>
+			</div>
+		</template>
+	</div>
+	<div id="deadlines">
+		<h3>Deadlines</h3>
+		<template id="deadline-template">
+			<div class="deadline">
+				<div class="color-block course-color"></div>
+				<div class="color-block cat-color"></div>
+				<span class="deadline-name"></span>
+				(<span class="course-name"></span> - <span class="cat-name"></span>)
+			</div>
+		</template>
+	</div>
+	<script src="/index.js"></script>
+</body>
+</html>

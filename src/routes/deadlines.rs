@@ -19,9 +19,9 @@ pub fn router() -> Router {
     Router::new()
         .route("/", get(all))
         .route("/", post(add))
-        .route("/{id}/", put(update))
-        .route("/{id}/", get(single))
-        .route("/{id}/", delete(delete_course))
+        .route("/{id}", put(update))
+        .route("/{id}", get(single))
+        .route("/{id}", delete(delete_course))
         .nest("/category", category::router())
 }
 

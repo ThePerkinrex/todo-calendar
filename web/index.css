@@ -1,0 +1,22 @@
+.color-block {
+	width: 0.7em;
+	height: 0.7em;
+	border-radius: 0.2em;
+	display: inline-block;
+	box-sizing: border-box;
+}
+
+html {
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	display: flex;
+	justify-content: center;
+	background-color: white;
+}
+
+body {
+	max-width: 800px;
+	width: 50%;
+	border-radius: 1em;
+	background-color: aliceblue;
+	padding: 2em;
+}
