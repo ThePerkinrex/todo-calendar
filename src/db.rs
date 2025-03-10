@@ -129,6 +129,7 @@ pub trait DbCreate: DbTable {
     async fn new(db: &Db, data: Self::Data) -> sqlx::Result<Self>;
 }
 
+#[allow(unused)]
 pub trait DbCreateWithId: DbTable {
     async fn new(db: &Db, id: Self::Id, data: Self::Data) -> sqlx::Result<Self>;
 }

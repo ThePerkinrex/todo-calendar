@@ -19,3 +19,5 @@ db-macros = { path = "./db-macros"}
 tower-http = { version = "0.6.2", features = ["trace", "fs"] }
 serde = { version = "1.0.218", features = ["derive"] }
 chrono-tz = "0.10.1"
+bon = "3.4.0"
+axum-extra = { version = "0.10.0", features = ["query"] }

@@ -4,11 +4,11 @@ use axum::{
     http::StatusCode,
     routing::{delete, get, post, put},
 };
+use axum_extra::extract::Query;
 
 use crate::{
     db::{
-        Db, DbCreate, DbDelete, DbReadAll, DbReadSingle, DbTable, DbUpdate,
-        deadline::{Deadline, DeadlineData, DeadlineId},
+        deadline::{Deadline, DeadlineData, DeadlineFilter, DeadlineId}, Db, DbCreate, DbDelete, DbReadAllPart, DbReadSingle, DbTable, DbUpdate
     },
     error::AppError,
 };
@@ -25,8 +25,8 @@ pub fn router() -> Router {
         .nest("/category", category::router())
 }
 
-async fn all(db: Db) -> Result<Json<Vec<Deadline>>, AppError> {
-    Ok(Json(Deadline::get_all(&db).await?))
+async fn all(db: Db, Query(filter): Query<DeadlineFilter>) -> Result<Json<Vec<Deadline>>, AppError> {
+    Ok(Json(Deadline::get_all_for(&db, &filter).await?))
 }
 
 async fn add(db: Db, Json(data): Json<DeadlineData>) -> Result<Json<DeadlineId>, AppError> {

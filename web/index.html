@@ -7,17 +7,18 @@
 	<link rel="stylesheet" href="/index.css">
 </head>
 <body>
-	<div id="courses">
-		<h3>Courses</h3>
+	<h3>Loaded at: <span id="now">Loading</span></h3>
+	<details id="courses">
+		<summary>Courses</summary>
 		<template id="course-template">
 			<div class="course">
 				<div class="color-block"></div>
 				<span class="course-name"></span>
 			</div>
 		</template>
-	</div>
-	<div id="deadlines">
-		<h3>Deadlines</h3>
+	</details>
+	<details id="deadlines" open>
+		<summary>Deadlines</summary>
 		<template id="deadline-template">
 			<div class="deadline">
 				<div class="color-block course-color"></div>
@@ -26,7 +27,13 @@
 				(<span class="course-name"></span> - <span class="cat-name"></span>)
 			</div>
 		</template>
-	</div>
+		<details id="past-deadlines">
+			<summary>Past Deadlines</summary>
+		</details>
+		<details id="next-deadlines" open>
+			<summary>Next Deadlines</summary>
+		</details>
+	</details>
 	<script src="/index.js"></script>
 </body>
 </html>
