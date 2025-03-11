@@ -8,7 +8,8 @@ use axum_extra::extract::Query;
 
 use crate::{
     db::{
-        deadline::{Deadline, DeadlineData, DeadlineFilter, DeadlineId}, Db, DbCreate, DbDelete, DbReadAllPart, DbReadSingle, DbTable, DbUpdate
+        Db, DbCreate, DbDelete, DbReadAllPart, DbReadSingle, DbTable, DbUpdate,
+        deadline::{Deadline, DeadlineData, DeadlineFilter, DeadlineId},
     },
     error::AppError,
 };
@@ -25,8 +26,13 @@ pub fn router() -> Router {
         .nest("/category", category::router())
 }
 
-async fn all(db: Db, Query(filter): Query<DeadlineFilter>) -> Result<Json<Vec<Deadline>>, AppError> {
-    Ok(Json(Deadline::get_all_for(&db, &filter).await?))
+async fn all(
+    db: Db,
+    Query(filter): Query<DeadlineFilter>,
+) -> Result<Json<Vec<Deadline>>, AppError> {
+	let mut deadlines = Deadline::get_all_for(&db, &filter).await?;
+	deadlines.sort_by(|a,b| a.timestamp.cmp(&b.timestamp));
+    Ok(Json(deadlines))
 }
 
 async fn add(db: Db, Json(data): Json<DeadlineData>) -> Result<Json<DeadlineId>, AppError> {

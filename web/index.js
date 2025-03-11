@@ -1,62 +1,91 @@
-const NOW = new Date()
-
-const COURSES = document.getElementById("courses")
-const COURSE_TEMPLATE = document.getElementById("course-template")
-
-async function loadCourses() {
-	let courses = await fetch("/courses").then(t => t.json())
-	for (const course of courses) {
-		const template = COURSE_TEMPLATE.content.cloneNode(true);
-		
-		template.querySelector('.color-block').style.background = `#${course.color}`;
-		template.querySelector('.course-name').innerText = course.name;
-		COURSES.appendChild(template)
-	}
-}
-
-loadCourses()
-
-
-const DEADLINES = document.getElementById("deadlines")
-const PAST_DEADLINES = document.getElementById("past-deadlines")
-const NEXT_DEADLINES = document.getElementById("next-deadlines")
-const DEADLINE_TEMPLATE = document.getElementById("deadline-template")
-
-function buildDeadline(deadline, course, cat) {
-	const template = DEADLINE_TEMPLATE.content.cloneNode(true);
-	template.querySelector('.course-color').style.background = `#${course.color}`;
-	template.querySelector('.cat-color').style.background = `#${cat.color}`;
-	template.querySelector('.deadline-name').innerText = deadline.name + " - " + new Date(deadline.timestamp).toUTCString();
-	template.querySelector('.course-name').innerText = course.name;
-	template.querySelector('.cat-name').innerText = cat.name;
-	return template;
-}
-
-async function loadDeadlines() {
-	let current_date = NOW.toISOString()
-	let past_params = new URLSearchParams()
-	past_params.append("to", current_date)
-	let next_params = new URLSearchParams()
-	next_params.append("from", current_date)
+function readFile(file) {
+	return new Promise((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => {
+			resolve(reader.result)
+		};
+		reader.onerror = (e) => {
+			reject(e)
+		};
+		reader.readAsText(file);
+	})
 	
-	let past_deadlines = await fetch("/deadlines?" + past_params).then(t => t.json())
-	for (const deadline of past_deadlines) {
-		const course = await fetch(`/courses/${deadline.course}`).then(x => x.json())
-		const cat = await fetch(`/deadlines/category/${deadline.category}`).then(x => x.json())
+}
 
-		PAST_DEADLINES.appendChild(buildDeadline(deadline, course, cat))
-	}
-	let next_deadlines = await fetch("/deadlines?" + next_params).then(t => t.json())
-	for (const deadline of next_deadlines) {
-		const course = await fetch(`/courses/${deadline.course}`).then(x => x.json())
-		const cat = await fetch(`/deadlines/category/${deadline.category}`).then(x => x.json())
+async function upload() {
+	const IMPORT_INPUT = document.getElementById("import-file")
+	if (IMPORT_INPUT.value !== "") {
+		const file = IMPORT_INPUT.files[0]
+		let data = {}
 
-		NEXT_DEADLINES.appendChild(buildDeadline(deadline, course, cat))
+		let text = await readFile(file)
+		
+		try {
+			data = JSON.parse(text)
+		} catch(e) {
+			alert("Invalid data: " + e)
+		}
+
+		let res = await fetch("/data", {
+			method: "POST",
+			body: JSON.stringify(data),
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		})
+		if (!res.ok) {
+			alert("Invalid data: " + await res.text())
+		}else{
+			document.location.reload()
+		}
+	}else{
+		alert("No file selected")
 	}
 }
 
-loadDeadlines()
+
+async function clearData() {
+	await fetch("/data", {
+		method: "DELETE"
+	})
+	document.location.reload()
+}
+
+async function addCourse(e) {
+	e.preventDefault()
+	const formData = new FormData(e.target)
+	let data = {
+		name: formData.get('name'),
+		color: formData.get('color')
+	}
+	await fetch("/courses", {
+		method: "POST",
+		body: JSON.stringify(data),
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	})
+	document.location.reload()
+}
 
 
-const NOW_EL = document.getElementById("now")
-NOW_EL.innerText = NOW.toUTCString()
+
+async function addDeadline(e) {
+	e.preventDefault()
+	const formData = new FormData(e.target)
+	const timestamp = new Date(formData.get('timestamp')).toISOString()
+	let data = {
+		name: formData.get('name'),
+		course: parseInt(formData.get('course')),
+		category: parseInt(formData.get('category')),
+		timestamp
+	}
+	await fetch("/deadlines", {
+		method: "POST",
+		body: JSON.stringify(data),
+		headers: {
+			'Content-Type': 'application/json'
+		}
+	})
+	document.location.reload()
+}

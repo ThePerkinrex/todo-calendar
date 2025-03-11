@@ -123,6 +123,7 @@ pub trait DbTable: Sized {
     type Data;
 
     fn id(&self) -> Self::Id;
+    fn data(&self) -> Self::Data;
 }
 
 pub trait DbCreate: DbTable {
@@ -158,8 +159,7 @@ pub trait DbDelete: DbTable {
     async fn delete_static(db: &Db, id: &Self::Id) -> sqlx::Result<()>;
 }
 
-
-#[derive(Debug, Serialize, Deserialize, sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, sqlx::Type, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[serde(transparent)]
 #[sqlx(transparent)]
 #[repr(transparent)]

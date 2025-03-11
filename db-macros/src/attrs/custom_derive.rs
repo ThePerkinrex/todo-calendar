@@ -17,6 +17,8 @@ mod custom_derive_kw {
     syn::custom_keyword!(DbUpdate);
     syn::custom_keyword!(DbDelete);
     syn::custom_keyword!(order_by);
+    syn::custom_keyword!(DbClear);
+    syn::custom_keyword!(sqlite);
 }
 
 pub enum OrderBy {
@@ -85,7 +87,27 @@ impl<'a> std::fmt::Display for CheckedOrderBy<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::None => write!(f, ""),
-            Self::By(ident) => write!(f, "ORDER BY {ident}"),
+            Self::By(ident) => write!(f, "ORDER BY \"{ident}\""),
+        }
+    }
+}
+
+struct Optional<T>(Option<T>);
+
+impl Parse for Optional<(Paren, custom_derive_kw::sqlite)> {
+    fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        if input.peek(Paren) {
+            let content;
+            let paren = parenthesized!(content in input);
+            let lookahead = content.lookahead1();
+            if lookahead.peek(custom_derive_kw::sqlite) {
+                let kw = content.parse()?;
+                Ok(Optional(Some((paren, kw))))
+            } else {
+                Err(lookahead.error())
+            }
+        } else {
+            Ok(Optional(None))
         }
     }
 }
@@ -98,6 +120,7 @@ pub enum CustomDerive {
     DbReadAll(custom_derive_kw::DbReadAll, OrderBy),
     DbUpdate(custom_derive_kw::DbUpdate),
     DbDelete(custom_derive_kw::DbDelete),
+    DbClear(custom_derive_kw::DbClear, Option<(Paren, custom_derive_kw::sqlite)>)
 }
 
 impl PartialEq for CustomDerive {
@@ -110,6 +133,7 @@ impl PartialEq for CustomDerive {
                 | (Self::DbReadAll(_, _), Self::DbReadAll(_, _))
                 | (Self::DbUpdate(_), Self::DbUpdate(_))
                 | (Self::DbDelete(_), Self::DbDelete(_))
+                | (Self::DbClear(_, _), Self::DbClear(_, _))
         )
     }
 }
@@ -137,6 +161,8 @@ impl Parse for CustomDerive {
             Ok(Self::DbUpdate(input.parse()?))
         } else if lookahead.peek(custom_derive_kw::DbDelete) {
             Ok(Self::DbDelete(input.parse()?))
+        } else if lookahead.peek(custom_derive_kw::DbClear) {
+            Ok(Self::DbClear(input.parse()?, input.parse::<Optional<_>>()?.0))
         } else {
             Err(lookahead.error())
         }
@@ -206,21 +232,18 @@ impl CustomDerive {
     where
         I: Iterator<Item = &'a Field>,
     {
-        let id_columns: Box<dyn Iterator<Item = String>> = match id_type {
-            IdType::Single { .. } => Box::new(std::iter::once("id".to_string())),
+        let id_columns: Box<dyn Iterator<Item = (TokenStream, String)>> = match id_type {
+            IdType::Single { .. } => Box::new(std::iter::once((quote! {0}, "id".to_string()))),
             IdType::Multiple { fields, .. } => Box::new(
                 fields
                     .iter()
                     .flat_map(|x| x.ident.iter())
-                    .map(ToString::to_string),
+                    .map(|x| (quote! {x}, x.to_string())),
             ),
         };
 
         let (args, columns): (Vec<_>, Vec<_>) = id_columns
-            .map(|x| {
-                let i = Ident::new(&x, Span::call_site());
-                (quote! {id.#i}, x)
-            })
+            .map(|(x, s)| (quote! {id.#x}, s))
             .chain(data_fields.map(|x| {
                 let i = &x.name;
                 (quote! {data.#i}, x.name.to_string())
@@ -267,167 +290,203 @@ impl CustomDerive {
         let table_name = Ident::new(&name.to_string().to_snake_case(), name.span());
         match self {
             Self::DbCreate(db_create) => {
-                self.db_create(name, id_name, id_type, data_fields, table_name, db_create)
-            }
+                        self.db_create(name, id_name, id_type, data_fields, table_name, db_create)
+                    }
             Self::DbCreateWithId(db_create_with_id) => self.db_create_with_id(
-                name,
-                id_name,
-                id_type,
-                data_fields,
-                table_name,
-                db_create_with_id,
-            ),
-            Self::DbReadSingle(db_read_single) => {
-                let where_clause = match id_type {
-                    IdType::Single { .. } => "id = $1".to_string(),
-                    IdType::Multiple { fields, .. } => SqlAndJoin(|| {
-                        fields
-                            .iter()
-                            .flat_map(|x| x.ident.iter())
-                            .enumerate()
-                            .map(|(i, x)| SqlEquals(x, SqlVar(i + 1)))
-                    })
-                    .to_string(),
-                };
-
-                let query = Literal::string(&format!(
-                    "SELECT * FROM {} WHERE {}",
-                    table_name, where_clause
-                ));
-
-                let args = match id_type {
-                    IdType::Single { .. } => vec![quote! {id}],
-                    IdType::Multiple { fields, .. } => fields
-                        .iter()
-                        .flat_map(|x| x.ident.iter())
-                        .map(|x| quote! {id.#x})
-                        .collect(),
-                };
-
-                quote! {
-                    #[automatically_derived]
-                    impl crate::db::#db_read_single for #name {
-                        async fn get(db: &crate::db::Db, id: &Self::Id) -> sqlx::Result<Option<Self>> {
-                            sqlx::query_as!(Self, #query, #(#args),*).fetch_optional(&db.pool).await
-                        }
-                    }
-                }
-            }
-            Self::DbReadAll(db_read_all, order_by) => {
-                let id_fields: Box<dyn Iterator<Item = Ident>> = match id_type {
-                    IdType::Single { .. } => Box::new(std::iter::once_with(|| parse_quote!(id))),
-                    IdType::Multiple { fields, .. } => {
-                        Box::new(fields.iter().flat_map(|x| x.ident.iter()).cloned())
-                    }
-                };
-                let checked_order =
-                    match order_by.check(id_fields.chain(data_fields.map(|f| f.name.clone()))) {
-                        Ok(x) => x,
-                        Err(e) => return e.to_compile_error(),
-                    };
-
-                let query = Literal::string(&format!("SELECT * FROM {table_name} {checked_order}"));
-
-                quote! {
-                    #[automatically_derived]
-                    impl crate::db::#db_read_all for #name {
-                        async fn get_all(db: &crate::db::Db) -> sqlx::Result<Vec<Self>> {
-                            sqlx::query_as!(Self, #query).fetch_all(&db.pool).await
-                        }
-                    }
-                }
-            }
-            Self::DbUpdate(db_update) => {
-                let (where_clause, vars, max_id) = match id_type {
-                    IdType::Single { .. } => ("id = $1".to_string(), quote! {self.id}, 1),
-                    IdType::Multiple { fields, .. } => (
-                        SqlAndJoin(|| {
-                            fields
-                                .iter()
-                                .flat_map(|x| x.ident.iter())
-                                .enumerate()
-                                .map(|(i, x)| SqlEquals(x, SqlVar(i + 1)))
-                        })
-                        .to_string(),
-                        {
-                            let vars = fields
-                                .iter()
-                                .flat_map(|x| x.ident.iter())
-                                .map(|x| quote! {self.#x});
-
-                            quote! {#(#vars),*}
-                        },
-                        fields.len(),
+                        name,
+                        id_name,
+                        id_type,
+                        data_fields,
+                        table_name,
+                        db_create_with_id,
                     ),
-                };
+            Self::DbReadSingle(db_read_single) => {
+                        let where_clause = match id_type {
+                            IdType::Single { .. } => "id = $1".to_string(),
+                            IdType::Multiple { fields, .. } => SqlAndJoin(|| {
+                                fields
+                                    .iter()
+                                    .flat_map(|x| x.ident.iter())
+                                    .enumerate()
+                                    .map(|(i, x)| SqlEquals(x, SqlVar(i + 1)))
+                            })
+                            .to_string(),
+                        };
 
-                let (set_clauses, data_vars): (Vec<_>, Vec<_>) = data_fields
-                    .enumerate()
-                    .map(|(i, f)| {
-                        (SqlEquals(&f.name, SqlVar(i + max_id + 1)).to_string(), {
-                            let name = &f.name;
-                            quote! {self.#name}
-                        })
-                    })
-                    .unzip();
+                        let query = Literal::string(&format!(
+                            "SELECT * FROM {} WHERE {}",
+                            table_name, where_clause
+                        ));
 
-                let set_clauses = set_clauses.join(", ");
+                        let args = match id_type {
+                            IdType::Single { .. } => vec![quote! {id}],
+                            IdType::Multiple { fields, .. } => fields
+                                .iter()
+                                .flat_map(|x| x.ident.iter())
+                                .map(|x| quote! {id.#x})
+                                .collect(),
+                        };
 
-                let query = Literal::string(&format!(
-                    "UPDATE {} SET {} WHERE {}",
-                    table_name, set_clauses, where_clause
-                ));
-
-                quote! {
-                    #[automatically_derived]
-                    impl crate::db::#db_update for #name {
-                        async fn save(&self, db: &crate::db::Db) -> sqlx::Result<()> {
-                            sqlx::query!(#query, #vars, #(#data_vars),*).execute(&db.pool).await?;
-                            Ok(())
+                        quote! {
+                            #[automatically_derived]
+                            impl crate::db::#db_read_single for #name {
+                                async fn get(db: &crate::db::Db, id: &Self::Id) -> sqlx::Result<Option<Self>> {
+                                    sqlx::query_as!(Self, #query, #(#args),*).fetch_optional(&db.pool).await
+                                }
+                            }
                         }
                     }
-                }
-            }
-            Self::DbDelete(db_delete) => {
-                let where_clause = match id_type {
-                    IdType::Single { .. } => "id = $1".to_string(),
-                    IdType::Multiple { fields, .. } => SqlAndJoin(|| {
-                        fields
-                            .iter()
-                            .flat_map(|x| x.ident.iter())
+            Self::DbReadAll(db_read_all, order_by) => {
+                        let id_fields: Box<dyn Iterator<Item = Ident>> = match id_type {
+                            IdType::Single { .. } => Box::new(std::iter::once_with(|| parse_quote!(id))),
+                            IdType::Multiple { fields, .. } => {
+                                Box::new(fields.iter().flat_map(|x| x.ident.iter()).cloned())
+                            }
+                        };
+                        let checked_order =
+                            match order_by.check(id_fields.chain(data_fields.map(|f| f.name.clone()))) {
+                                Ok(x) => x,
+                                Err(e) => return e.to_compile_error(),
+                            };
+
+                        let query = Literal::string(&format!("SELECT * FROM {table_name} {checked_order}"));
+                        println!("SELECT: {query}");
+
+                        quote! {    
+                            #[automatically_derived]
+                            impl crate::db::#db_read_all for #name {
+                                async fn get_all(db: &crate::db::Db) -> sqlx::Result<Vec<Self>> {
+                                    sqlx::query_as!(Self, #query).fetch_all(&db.pool).await
+                                }
+                            }
+                        }
+                    }
+            Self::DbUpdate(db_update) => {
+                        let (where_clause, vars, max_id) = match id_type {
+                            IdType::Single { .. } => ("id = $1".to_string(), quote! {self.id}, 1),
+                            IdType::Multiple { fields, .. } => (
+                                SqlAndJoin(|| {
+                                    fields
+                                        .iter()
+                                        .flat_map(|x| x.ident.iter())
+                                        .enumerate()
+                                        .map(|(i, x)| SqlEquals(x, SqlVar(i + 1)))
+                                })
+                                .to_string(),
+                                {
+                                    let vars = fields
+                                        .iter()
+                                        .flat_map(|x| x.ident.iter())
+                                        .map(|x| quote! {self.#x});
+
+                                    quote! {#(#vars),*}
+                                },
+                                fields.len(),
+                            ),
+                        };
+
+                        let (set_clauses, data_vars): (Vec<_>, Vec<_>) = data_fields
                             .enumerate()
-                            .map(|(i, x)| SqlEquals(x, SqlVar(i + 1)))
-                    })
-                    .to_string(),
-                };
+                            .map(|(i, f)| {
+                                (SqlEquals(&f.name, SqlVar(i + max_id + 1)).to_string(), {
+                                    let name = &f.name;
+                                    quote! {self.#name}
+                                })
+                            })
+                            .unzip();
 
-                let query = Literal::string(&format!(
-                    "DELETE FROM {} WHERE {}",
-                    table_name, where_clause
-                ));
+                        let set_clauses = set_clauses.join(", ");
 
-                let args = match id_type {
-                    IdType::Single { .. } => vec![quote! {id}],
-                    IdType::Multiple { fields, .. } => fields
-                        .iter()
-                        .flat_map(|x| x.ident.iter())
-                        .map(|x| quote! {id.#x})
-                        .collect(),
-                };
+                        let query = Literal::string(&format!(
+                            "UPDATE {} SET {} WHERE {}",
+                            table_name, set_clauses, where_clause
+                        ));
+
+                        quote! {
+                            #[automatically_derived]
+                            impl crate::db::#db_update for #name {
+                                async fn save(&self, db: &crate::db::Db) -> sqlx::Result<()> {
+                                    sqlx::query!(#query, #vars, #(#data_vars),*).execute(&db.pool).await?;
+                                    Ok(())
+                                }
+                            }
+                        }
+                    }
+            Self::DbDelete(db_delete) => {
+                        let where_clause = match id_type {
+                            IdType::Single { .. } => "id = $1".to_string(),
+                            IdType::Multiple { fields, .. } => SqlAndJoin(|| {
+                                fields
+                                    .iter()
+                                    .flat_map(|x| x.ident.iter())
+                                    .enumerate()
+                                    .map(|(i, x)| SqlEquals(x, SqlVar(i + 1)))
+                            })
+                            .to_string(),
+                        };
+
+                        let query = Literal::string(&format!(
+                            "DELETE FROM {} WHERE {}",
+                            table_name, where_clause
+                        ));
+
+                        let args = match id_type {
+                            IdType::Single { .. } => vec![quote! {id}],
+                            IdType::Multiple { fields, .. } => fields
+                                .iter()
+                                .flat_map(|x| x.ident.iter())
+                                .map(|x| quote! {id.#x})
+                                .collect(),
+                        };
+
+                        quote! {
+                            #[automatically_derived]
+                            impl crate::db::#db_delete for #name {
+                                async fn delete_static(db: &Db, id: &Self::Id) -> sqlx::Result<()> {
+                                    let query = sqlx::query!(
+                                        #query, #(#args),*
+                                    );
+                                    query.execute(&db.pool).await?;
+                                    Ok(())
+                                }
+                            }
+                        }
+                    }
+            Self::DbClear(_, sqlite) => {
+                let extra_delete = sqlite.map(|_| {
+                    let query = Literal::string(&format!("UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='{table_name}';"));
+                    quote! {
+                        sqlx::query!(#query).execute(&db.pool).await?;
+                    }
+                }).into_iter();
+
+                let query = Literal::string(&format!("DELETE FROM {table_name};"));
 
                 quote! {
                     #[automatically_derived]
-                    impl crate::db::#db_delete for #name {
-                        async fn delete_static(db: &Db, id: &Self::Id) -> sqlx::Result<()> {
-                            let query = sqlx::query!(
-                                #query, #(#args),*
-                            );
-                            query.execute(&db.pool).await?;
-                            Ok(())
+                    impl #name {
+                        pub async fn clear(db: &crate::db::Db) -> sqlx::Result<()> {
+                            let internal = async |tx| {
+                                sqlx::query!(#query).execute(&db.pool).await?;
+                                #(#extra_delete)*
+                                Ok(())
+                            };
+                            let mut transaction = db.pool.begin().await?;
+                            match internal(&mut transaction).await {
+                                Ok(()) => {
+                                    transaction.commit().await?;
+                                    Ok(())
+                                }
+                                Err(e) => {
+                                    transaction.rollback().await?;
+                                    Err(e)
+                                }
+                            }
+                            
                         }
                     }
                 }
-            }
+            },
         }
     }
 }

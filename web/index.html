@@ -4,18 +4,67 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>To-dos</title>
+
+	<link rel="stylesheet" href="/calendar.css">
 	<link rel="stylesheet" href="/index.css">
 </head>
 <body>
+	<script src="/index.js"></script>
 	<h3>Loaded at: <span id="now">Loading</span></h3>
+	<details id="data">
+		<summary>Data</summary>
+		<a href="/data" download="todo.json">Export data</a><br>
+		<input type="file" id="import-file" accept="application/json">
+		<button onclick="upload()">Import data</button><br>
+		<button onclick="clearData()">Clear data</button>
+	</details>
 	<details id="courses">
 		<summary>Courses</summary>
+		<details id="add-course">
+			<summary>Add</summary>
+			<form onsubmit="addCourse(event)">
+				<input type="text" name="name" placeholder="Course name">
+				<input type="color" name="color">
+				<input type="submit" value="Add!">
+			</form>
+		</details>
 		<template id="course-template">
 			<div class="course">
 				<div class="color-block"></div>
 				<span class="course-name"></span>
 			</div>
 		</template>
+	</details>
+	<details id="events">
+		<summary>Events</summary>
+		<template id="event-template">
+			<div class="event">
+				<div class="color-block course-color"></div>
+				<div class="color-block cat-color"></div>
+				<span class="event-name"></span>
+				(<span class="course-name"></span> - <span class="cat-name"></span>)
+			</div>
+		</template>
+		<details id="add-event">
+			<summary>Add event</summary>
+			<form onsubmit="addEvent(event)">
+				<input type="text" name="name" placeholder="event name"><br>
+				<input type="datetime-local" name="start">
+				<input type="datetime-local" name="end"><br>
+				<select name="course" class="course-select"></select><br>
+				<select name="category" class="event-cat-select"></select><br>
+				<input type="submit" value="Add!">
+			</form>
+		</details>
+		<details id="past-events">
+			<summary>Past Events</summary>
+		</details>
+		<details id="ongoing-events" open>
+			<summary>Ongoing Events</summary>
+		</details>
+		<details id="next-events" open>
+			<summary>Next Events</summary>
+		</details>
 	</details>
 	<details id="deadlines" open>
 		<summary>Deadlines</summary>
@@ -27,6 +76,16 @@
 				(<span class="course-name"></span> - <span class="cat-name"></span>)
 			</div>
 		</template>
+		<details id="add-deadline">
+			<summary>Add deadline</summary>
+			<form onsubmit="addDeadline(event)">
+				<input type="text" name="name" placeholder="Deadline name"><br>
+				<input type="datetime-local" name="timestamp"><br>
+				<select name="course" class="course-select"></select><br>
+				<select name="category" class="deadline-cat-select"></select><br>
+				<input type="submit" value="Add!">
+			</form>
+		</details>
 		<details id="past-deadlines">
 			<summary>Past Deadlines</summary>
 		</details>
@@ -34,6 +93,13 @@
 			<summary>Next Deadlines</summary>
 		</details>
 	</details>
-	<script src="/index.js"></script>
+	<details class="calendars" open>
+		<summary>Calendar</summary>
+		<div id="weekly-calendar"></div>
+	</details>
+	<script type="module">
+		import {start} from '/js/loading.js'
+		start()
+	</script>
 </body>
 </html>

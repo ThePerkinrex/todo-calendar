@@ -116,6 +116,20 @@ fn record_with_data_internal(input: Record) -> proc_macro2::TokenStream {
         },
     );
 
+    let assign_fields_data = fields.iter().flat_map(|(_, p)| p).map(
+        |Field {
+             attrs: _,
+             vis: _,
+             name,
+             colon: _,
+             ty: _,
+         }| {
+            quote! {
+                #name: self.#name.clone()
+            }
+        },
+    );
+
     let dbtable = quote_spanned! {name.span() => crate::db::DbTable};
     let assignment_id = id_ty.create_fields_ts(&id_id);
 
@@ -150,6 +164,12 @@ fn record_with_data_internal(input: Record) -> proc_macro2::TokenStream {
 
             fn id(&self) -> Self::Id {
                 #from_self
+            }
+
+            fn data(&self) -> Self::Data {
+                Self::Data {
+                    #(#assign_fields_data),*
+                }
             }
         }
 
@@ -459,7 +479,7 @@ mod tests {
         let macro_out = super::record_with_data_internal(prog);
         println!("{}", macro_out);
         let file_out: File = syn::parse2(macro_out).unwrap();
-        let expected_out: File = parse_quote! {# [derive (Debug , Serialize , Deserialize)] # [serde (transparent)] # [derive (sqlx :: Type)] # [sqlx (transparent)] pub struct RecipeId (i64) ; impl From < i64 > for RecipeId { fn from (value : i64) -> Self { Self (value) } } # [derive (Debug , Serialize , Deserialize)] pub struct RecipeData { pub name : String , # [serde (deserialize_with = "deserialize_or_default")] pub description : Option < String > , # [serde (deserialize_with = "deserialize_or_default")] pub servings : Option < i64 > , # [serde (deserialize_with = "deserialize_or_default")] pub prep_time : Option < i64 > , # [serde (deserialize_with = "deserialize_or_default")] pub cook_time : Option < i64 > , } # [derive (FromRow)] # [derive (Debug , Serialize , Deserialize)] pub struct Recipe { id : i64 , pub name : String , pub description : Option < String > , pub servings : Option < i64 > , pub prep_time : Option < i64 > , pub cook_time : Option < i64 > , } impl Recipe { fn from_data (id : RecipeId , data : RecipeData) -> Self { Self { id : id . 0 , name : data . name , description : data . description , servings : data . servings , prep_time : data . prep_time , cook_time : data . cook_time , } } pub fn set (& mut self , data : RecipeData) { self . name = data . name ; self . description = data . description ; self . servings = data . servings ; self . prep_time = data . prep_time ; self . cook_time = data . cook_time ; } } # [automatically_derived] impl crate :: db :: DbTable for Recipe { type Id = RecipeId ; type Data = RecipeData ; fn id (& self) -> Self :: Id { RecipeId (self . id) } } :: core :: compile_error ! { "what is not a valid property" }};
+        let expected_out: File = parse_quote! {# [derive (Debug , Serialize , Deserialize)] # [serde (transparent)] # [derive (sqlx :: Type)] # [sqlx (transparent)] pub struct RecipeId (i64) ; impl From < i64 > for RecipeId { fn from (value : i64) -> Self { Self (value) } } # [derive (Debug , Serialize , Deserialize)] pub struct RecipeData { pub name : String , # [serde (deserialize_with = "deserialize_or_default")] pub description : Option < String > , # [serde (deserialize_with = "deserialize_or_default")] pub servings : Option < i64 > , # [serde (deserialize_with = "deserialize_or_default")] pub prep_time : Option < i64 > , # [serde (deserialize_with = "deserialize_or_default")] pub cook_time : Option < i64 > , } # [derive (FromRow)] # [derive (Debug , Serialize , Deserialize)] pub struct Recipe { id : i64 , pub name : String , pub description : Option < String > , pub servings : Option < i64 > , pub prep_time : Option < i64 > , pub cook_time : Option < i64 > , } impl Recipe { fn from_data (id : RecipeId , data : RecipeData) -> Self { Self { id : id . 0 , name : data . name , description : data . description , servings : data . servings , prep_time : data . prep_time , cook_time : data . cook_time , } } pub fn set (& mut self , data : RecipeData) { self . name = data . name ; self . description = data . description ; self . servings = data . servings ; self . prep_time = data . prep_time ; self . cook_time = data . cook_time ; } } # [automatically_derived] impl crate :: db :: DbTable for Recipe { type Id = RecipeId ; type Data = RecipeData ; fn id (& self) -> Self :: Id { RecipeId (self . id) } fn data (& self) -> Self :: Data { Self :: Data { name : self . name . clone () , description : self . description . clone () , servings : self . servings . clone () , prep_time : self . prep_time . clone () , cook_time : self . cook_time . clone () } } } :: core :: compile_error ! { "what is not a valid property" }};
         assert_eq!(file_out, expected_out);
     }
 

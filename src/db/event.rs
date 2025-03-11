@@ -1,15 +1,15 @@
-use super::{course::CourseId, DateTime, Db, IdPart, DbReadAllPart};
+use super::{DateTime, Db, DbReadAllPart, IdPart, course::CourseId};
 use bon::Builder;
 use serde::{Deserialize, Serialize};
-use sqlx::{sqlite::SqliteArguments, FromRow, Arguments};
+use sqlx::{Arguments, FromRow, sqlite::SqliteArguments};
 
 db_macros::record_with_data! {
     #[data(derive(Debug, Serialize, Deserialize))]
     #[whole(derive(Debug, FromRow, Serialize, Deserialize))]
-    #[db(DbCreate, DbReadSingle, DbReadAll(order_by(name)), DbUpdate, DbDelete)]
+    #[db(DbCreate, DbReadSingle, DbReadAll(order_by(name)), DbUpdate, DbDelete, DbClear(sqlite))]
     pub struct EventCategory {
         id:
-            #[derive(Debug, Clone, Serialize, Deserialize)]
+            #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
             #[serde(transparent)]
             #[encode]
             i64,
@@ -21,10 +21,10 @@ db_macros::record_with_data! {
 db_macros::record_with_data! {
     #[data(derive(Debug, Serialize, Deserialize))]
     #[whole(derive(Debug, FromRow, Serialize, Deserialize))]
-    #[db(DbCreate, DbReadSingle, DbReadAll(order_by(start)), DbUpdate, DbDelete)]
+    #[db(DbCreate, DbReadSingle, DbReadAll(order_by(start)), DbUpdate, DbDelete, DbClear(sqlite))]
     pub struct Event {
         id:
-            #[derive(Debug, Clone, Serialize, Deserialize)]
+            #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
             #[serde(transparent)]
             #[encode]
             i64,
@@ -36,13 +36,12 @@ db_macros::record_with_data! {
     }
 }
 
-
 #[derive(Debug, Builder, Deserialize)]
 pub struct EventFilter {
-    #[builder(field)] 
+    #[builder(field)]
     #[serde(default)]
     pub course: Vec<CourseId>,
-    #[builder(field)] 
+    #[builder(field)]
     #[serde(default)]
     pub category: Vec<EventCategoryId>,
     #[serde(default)]
@@ -52,7 +51,7 @@ pub struct EventFilter {
     #[serde(default)]
     pub end_from: Option<DateTime>,
     #[serde(default)]
-    pub end_to: Option<DateTime>
+    pub end_to: Option<DateTime>,
 }
 
 impl IdPart<Event> for EventFilter {}

@@ -8,7 +8,8 @@ use axum_extra::extract::Query;
 
 use crate::{
     db::{
-        event::{Event, EventData, EventFilter, EventId}, Db, DbCreate, DbDelete, DbReadAllPart, DbReadSingle, DbTable, DbUpdate
+        Db, DbCreate, DbDelete, DbReadAllPart, DbReadSingle, DbTable, DbUpdate,
+        event::{Event, EventData, EventFilter, EventId},
     },
     error::AppError,
 };
