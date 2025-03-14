@@ -68,6 +68,7 @@ async fn import(db: Db, Json(data): Json<VersionedData>) -> Result<StatusCode, A
 }
 
 async fn import_v1_0_0(db: Db, data: Data) -> Result<StatusCode, AppError> {
+    // This should be a transaction
     let mut color_replacements = HashMap::with_capacity(data.colors.capacity());
     for color in data.colors {
         let id = Color::new(&db, color.data()).await?.id();

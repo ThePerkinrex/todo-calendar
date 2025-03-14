@@ -9,9 +9,27 @@
 	<link rel="stylesheet" href="/index.css">
 </head>
 <body>
+	<h1>Task Manager</h1>
+	<a href="/settings.html" class="settings">Settings</a>
 	<script src="/index.js"></script>
-	<h3>Loaded at: <span id="now">Loading</span></h3>
-	<details id="data">
+	<span class="loadinfo">Loaded at: <span id="now">Loading</span></span>
+	<table class="tasks">
+		<thead>
+			<tr>
+				<th>ID</th>
+				<th>Name</th>
+				<th>Category</th>
+				<th>Course</th>
+				<th>State</th>
+				<th>Time</th>
+				<th>Parent</th>
+			</tr>
+		</thead>
+		<tbody>
+
+		</tbody>
+	</table>
+	<!-- <details id="data">
 		<summary>Data</summary>
 		<a href="/data" download="todo.json">Export data</a><br>
 		<input type="file" id="import-file" accept="application/json">
@@ -96,7 +114,7 @@
 	<details class="calendars" open>
 		<summary>Calendar</summary>
 		<div id="weekly-calendar"></div>
-	</details>
+	</details> -->
 	<script type="module">
 		import {start} from '/js/loading.js'
 		start()
