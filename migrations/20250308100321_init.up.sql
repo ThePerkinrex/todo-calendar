@@ -1,44 +1,49 @@
 -- Add up migration script here
+CREATE TABLE color (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE,
+	fallback TEXT NOT NULL
+);
+
 CREATE TABLE course (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-	color TEXT NOT NULL
+	color INTEGER NOT NULL,
+	FOREIGN KEY(color) REFERENCES color(id)
 );
 
-CREATE TABLE deadline_category (
+CREATE TABLE category (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-	color TEXT NOT NULL
+	color INTEGER NOT NULL,
+	FOREIGN KEY(color) REFERENCES color(id)
 );
 
-CREATE TABLE deadline (
-	id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-	timestamp DATETIME NOT NULL,
-	course INTEGER NOT NULL,
-	category INTEGER NOT NULL,
-	FOREIGN KEY(course) REFERENCES course(id),
-	FOREIGN KEY(category) REFERENCES deadline_category(id)
-);
-
-CREATE TABLE event_category (
+CREATE TABLE state (
     id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-	color TEXT NOT NULL
+	color INTEGER NOT NULL,
+	FOREIGN KEY(color) REFERENCES color(id)
 );
 
-CREATE TABLE event (
+
+CREATE TABLE time (
+    id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    start DATETIME NOT NULL,
+	end DATETIME
+);
+
+CREATE TABLE task (
 	id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-	start DATETIME NOT NULL,
-	end DATETIME NOT NULL,
-	course INTEGER NOT NULL,
 	category INTEGER NOT NULL,
+	course INTEGER,
+	time INTEGER,
+	state INTEGER,
+	parent INTEGER,
 	FOREIGN KEY(course) REFERENCES course(id),
-	FOREIGN KEY(category) REFERENCES event_category(id)
+	FOREIGN KEY(category) REFERENCES category(id),
+	FOREIGN KEY(time) REFERENCES time(id),
+	FOREIGN KEY(state) REFERENCES state(id),
+	FOREIGN KEY(parent) REFERENCES task(id)
 );
-
-INSERT INTO deadline_category(name, color) VALUES('Assignment', 'F94144');
-INSERT INTO event_category(name, color) VALUES('Lecture', 'F9C74F');
-INSERT INTO event_category(name, color) VALUES('Presentation', 'F3722C');
-INSERT INTO event_category(name, color) VALUES('Exam', '43AA8B');

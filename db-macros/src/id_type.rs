@@ -1,5 +1,5 @@
 use heck::{ToSnakeCase, ToUpperCamelCase};
-use proc_macro2::Span;
+use proc_macro2::{Literal, Span};
 use quote::{quote, ToTokens};
 use syn::{
     braced,
@@ -98,6 +98,7 @@ impl IdType {
                 } else {
                     quote! {}
                 };
+
                 quote! {
                     #(#attrs)*
                     #encode
@@ -106,6 +107,13 @@ impl IdType {
                     impl From<#ty> for #name {
                         fn from(value: #ty) -> Self {
                             Self(value)
+                        }
+                    }
+
+                    impl crate::db::Field<crate::db::SimpleFieldTable<#table>> for #name {
+                        type T = Self;
+                        fn name(table: &crate::db::SimpleFieldTable<#table>) -> &'static str {
+                            "id"
                         }
                     }
 
@@ -119,14 +127,21 @@ impl IdType {
                 let impls = fields.iter().map(|x| {
                     let ty = &x.ty;
                     let name = x.ident.as_ref().unwrap();
+                    let name_str = Literal::string(&name.to_string());
                     let name = Ident::new(&name.to_string().to_upper_camel_case(), name.span());
                     quote! {
                         pub struct #name(pub super::#ty);
                         impl crate::db::IdPart<super::#table> for #name {}
+                        impl crate::db::Field<crate::db::SimpleFieldTable<super::#table>> for #name {
+                            type T = Self;
+                            fn name(table: &crate::db::SimpleFieldTable<super::#table>) -> &'static str {
+                                #name_str
+                            }
+                        }
                     }
                 });
                 let fields = fields.iter().map(ToTokens::to_token_stream);
-                let mod_name = Ident::new(&table.to_string().to_snake_case(), table.span());
+                let mod_name = Ident::new(&format!("{}_id", table.to_string().to_snake_case()), table.span());
                 quote! {
                     #(#attrs)*
                     #vis struct #name {

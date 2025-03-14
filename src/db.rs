@@ -1,4 +1,4 @@
-use std::{env, path::Path};
+use std::{env, marker::PhantomData, path::Path};
 
 use axum::{
     Extension,
@@ -6,15 +6,16 @@ use axum::{
     extract::FromRequestParts,
     http::{Request, request::Parts},
 };
-use chrono::{NaiveDateTime, TimeZone, Utc};
-use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Sqlite, SqlitePool, migrate::Migrator};
 use thiserror::Error;
 use tower::{Layer, Service};
 
+pub mod category;
+pub mod color;
 pub mod course;
-pub mod deadline;
-pub mod event;
+pub mod state;
+pub mod task;
+pub mod time;
 
 #[derive(Debug, Error)]
 pub enum GetPoolError {
@@ -118,6 +119,32 @@ where
 {
 }
 
+// pub trait FieldTable {
+//     fn name<F: Field<Self>>(&self) -> impl std::fmt::Display;
+// }
+
+pub struct SimpleFieldTable<T>(PhantomData<T>);
+
+impl<T> SimpleFieldTable<T> {
+    pub const fn new() -> Self {
+        Self(PhantomData)
+    }
+}
+
+// impl<T> FieldTable for SimpleFieldTable<T> {
+//     fn name<F: Field<Self>>(&self) -> impl std::fmt::Display {
+//         F::name()
+//     }
+// }
+
+pub trait Field<Table>
+where
+    Table: ?Sized,
+{
+    type T;
+    fn name(table: &Table) -> impl std::fmt::Display;
+}
+
 pub trait DbTable: Sized {
     type Id;
     type Data;
@@ -157,16 +184,4 @@ pub trait DbUpdate: DbTable {
 pub trait DbDelete: DbTable {
     // async fn delete(self, db: &Db) -> sqlx::Result<()>;
     async fn delete_static(db: &Db, id: &Self::Id) -> sqlx::Result<()>;
-}
-
-#[derive(Debug, Serialize, Deserialize, sqlx::Type, Clone, PartialEq, Eq, PartialOrd, Ord)]
-#[serde(transparent)]
-#[sqlx(transparent)]
-#[repr(transparent)]
-pub struct DateTime(chrono::DateTime<Utc>);
-
-impl From<NaiveDateTime> for DateTime {
-    fn from(value: NaiveDateTime) -> Self {
-        Self(Utc.from_utc_datetime(&value))
-    }
 }

@@ -30,8 +30,8 @@ async fn all(
     db: Db,
     Query(filter): Query<DeadlineFilter>,
 ) -> Result<Json<Vec<Deadline>>, AppError> {
-	let mut deadlines = Deadline::get_all_for(&db, &filter).await?;
-	deadlines.sort_by(|a,b| a.timestamp.cmp(&b.timestamp));
+    let mut deadlines = Deadline::get_all_for(&db, &filter).await?;
+    deadlines.sort_by(|a, b| a.timestamp.cmp(&b.timestamp));
     Ok(Json(deadlines))
 }
 

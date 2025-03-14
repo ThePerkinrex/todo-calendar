@@ -1,8 +1,10 @@
 use field::Field;
+use heck::{ToSnakeCase, ToUpperCamelCase};
 use proc_macro::TokenStream;
+use proc_macro2::Literal;
 use quote::{format_ident, quote, quote_spanned};
 use record::Record;
-use syn::parse_macro_input;
+use syn::{parse_macro_input, Ident};
 
 mod attrs;
 
@@ -130,6 +132,40 @@ fn record_with_data_internal(input: Record) -> proc_macro2::TokenStream {
         },
     );
 
+    
+
+    let data_fields_structs = fields.iter().flat_map(|(_, p)| p).map(
+        |Field {
+             attrs: _,
+             vis: _,
+             name: field,
+             colon: _,
+             ty,
+         }| {
+            let name_str = Literal::string(&field.to_string());
+            let field = Ident::new(&field.to_string().to_upper_camel_case(), field.span());
+            quote! {
+                pub struct #field;
+
+                impl crate::db::Field<crate::db::SimpleFieldTable<#name>> for #field {
+                    type T = #ty;
+                    fn name(table: &crate::db::SimpleFieldTable<#name>) -> &'static str {
+                        #name_str
+                    }
+                }
+            }
+        },
+    );
+
+    let data_fields_mod_name = Ident::new(&format!("{}_data", name.to_string().to_snake_case()), name.span());
+
+    let data_fields_mod = quote!{
+        #vis mod #data_fields_mod_name {
+            use super::*;
+            #(#data_fields_structs)*
+        }
+    };
+
     let dbtable = quote_spanned! {name.span() => crate::db::DbTable};
     let assignment_id = id_ty.create_fields_ts(&id_id);
 
@@ -186,6 +222,8 @@ fn record_with_data_internal(input: Record) -> proc_macro2::TokenStream {
         #whole
 
         #imp
+
+        #data_fields_mod
     }
 }
 

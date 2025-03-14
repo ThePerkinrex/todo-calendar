@@ -1,27 +1,33 @@
 use std::collections::HashMap;
 
 use axum::{
-    http::StatusCode, routing::{delete, get, post}, Json, Router
+    Json, Router,
+    http::StatusCode,
+    routing::{delete, get, post},
 };
 use serde::{Deserialize, Serialize};
 
 use crate::{
     db::{
-        Db, DbCreate, DbReadAll, DbTable,
-        course::Course,
-        deadline::{Deadline, DeadlineCategory},
-        event::{Event, EventCategory},
+        category::Category, color::Color, course::Course, state::State, task::{Optional, Task}, time::Time, Db, DbCreate, DbReadAll, DbTable, DbUpdate
     },
     error::AppError,
 };
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Data {
+    #[serde(default)]
     courses: Vec<Course>,
-    deadlines: Vec<Deadline>,
-    deadline_categories: Vec<DeadlineCategory>,
-    event: Vec<Event>,
-    event_categories: Vec<EventCategory>,
+    #[serde(default)]
+    tasks: Vec<Task>,
+    #[serde(default)]
+    categories: Vec<Category>,
+    #[serde(default)]
+    states: Vec<State>,
+    #[serde(default)]
+    times: Vec<Time>,
+    #[serde(default)]
+    colors: Vec<Color>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -41,10 +47,11 @@ pub fn router() -> Router {
 async fn export(db: Db) -> Result<Json<VersionedData>, AppError> {
     Ok(Json(VersionedData::V1_0_0(Data {
         courses: Course::get_all(&db).await?,
-        deadlines: Deadline::get_all(&db).await?,
-        deadline_categories: DeadlineCategory::get_all(&db).await?,
-        event: Event::get_all(&db).await?,
-        event_categories: EventCategory::get_all(&db).await?,
+        tasks: Task::get_all(&db).await?,
+        categories: Category::get_all(&db).await?,
+        states: State::get_all(&db).await?,
+        times: Time::get_all(&db).await?,
+        colors: Color::get_all(&db).await?,
     })))
 }
 
@@ -55,47 +62,60 @@ async fn import(db: Db, Json(data): Json<VersionedData>) -> Result<StatusCode, A
 }
 
 async fn import_v1_0_0(db: Db, data: Data) -> Result<StatusCode, AppError> {
+    let mut color_replacements = HashMap::with_capacity(data.colors.capacity());
+    for color in data.colors {
+        let id = Color::new(&db, color.data()).await?.id();
+        color_replacements.insert(color.id(), id);
+    }
     let mut course_replacements = HashMap::with_capacity(data.courses.capacity());
-    for course in data.courses {
+    for mut course in data.courses {
+        course.color = *color_replacements.get(&course.color).ok_or(StatusCode::BAD_REQUEST)?;
         let id = Course::new(&db, course.data()).await?.id();
         course_replacements.insert(course.id(), id);
     }
-    {
-        let mut deadline_cat_replacements = HashMap::with_capacity(data.deadline_categories.len());
-        for deadline_cat in data.deadline_categories {
-            let id = DeadlineCategory::new(&db, deadline_cat.data()).await?.id();
-            deadline_cat_replacements.insert(deadline_cat.id(), id);
-        }
-        for deadline in data.deadlines {
-            let mut data = deadline.data();
-            data.course = course_replacements[&data.course].clone();
-            data.category = deadline_cat_replacements[&data.category].clone();
-            Deadline::new(&db, data).await?;
-        }
+    let mut state_replacements = HashMap::with_capacity(data.states.capacity());
+    for mut state in data.states {
+        state.color = *color_replacements.get(&state.color).ok_or(StatusCode::BAD_REQUEST)?;
+        let id = State::new(&db, state.data()).await?.id();
+        state_replacements.insert(state.id(), id);
     }
-    {
-        let mut event_cat_replacements = HashMap::with_capacity(data.event_categories.len());
-        for event_cat in data.event_categories {
-            let id = EventCategory::new(&db, event_cat.data()).await?.id();
-            event_cat_replacements.insert(event_cat.id(), id);
-        }
-        for event in data.event {
-            let mut data = event.data();
-            data.course = course_replacements[&data.course].clone();
-            data.category = event_cat_replacements[&data.category].clone();
-            Event::new(&db, data).await?;
-        }
+    let mut category_replacements = HashMap::with_capacity(data.categories.capacity());
+    for mut category in data.categories {
+        category.color = *color_replacements.get(&category.color).ok_or(StatusCode::BAD_REQUEST)?;
+        let id = Category::new(&db, category.data()).await?.id();
+        category_replacements.insert(category.id(), id);
+    }
+    let mut time_replacements = HashMap::with_capacity(data.times.capacity());
+    for time in data.times {
+        let id = Time::new(&db, time.data()).await?.id();
+        time_replacements.insert(time.id(), id);
+    }
+    let mut task_replacements = HashMap::with_capacity(data.tasks.capacity());
+    let mut tasks = Vec::with_capacity(data.tasks.capacity());
+    for mut task in data.tasks {
+        task.category = *category_replacements.get(&task.category).ok_or(StatusCode::BAD_REQUEST)?;
+        task.course = Optional(task.course.0.map(|course| course_replacements.get(&course).ok_or(StatusCode::BAD_REQUEST)).transpose()?.copied());
+        task.state = Optional(task.state.0.map(|state| state_replacements.get(&state).ok_or(StatusCode::BAD_REQUEST)).transpose()?.copied());
+        task.time = Optional(task.time.0.map(|time| time_replacements.get(&time).ok_or(StatusCode::BAD_REQUEST)).transpose()?.copied());
+        let parent = task.parent.0.take();
+        let mut new_task = Task::new(&db, task.data()).await?;
+        new_task.parent = Optional(parent);
+        task_replacements.insert(task.id(), new_task.id());
+        tasks.push(task);
+    }
+    for mut task in tasks {
+        task.parent = Optional(task.parent.0.map(|parent| task_replacements.get(&parent).ok_or(StatusCode::BAD_REQUEST)).transpose()?.copied());
+        task.save(&db).await?;
     }
     Ok(StatusCode::OK)
 }
 
-
-
 async fn clear(db: Db) -> Result<StatusCode, AppError> {
-	Deadline::clear(&db).await?;
-	DeadlineCategory::clear(&db).await?;
-	Event::clear(&db).await?;
-	EventCategory::clear(&db).await?;
-	Course::clear(&db).await?;
+    Task::clear(&db).await?;
+    Category::clear(&db).await?;
+    Time::clear(&db).await?;
+    Course::clear(&db).await?;
+    State::clear(&db).await?;
+    Color::clear(&db).await?;
     Ok(StatusCode::OK)
 }

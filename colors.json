@@ -1,0 +1,20 @@
+{
+	"version": "1.0.0",
+	"colors": [{
+		"id": 0,
+		"name": "red",
+		"fallback": "#F94144"
+	},{
+		"id": 1,
+		"name": "yellow",
+		"fallback": "#F9C74F"
+	},{
+		"id": 2,
+		"name": "orange",
+		"fallback": "#F3722C"
+	},{
+		"id": 3,
+		"name": "turquoise",
+		"fallback": "#43AA8B"
+	}]
+}
