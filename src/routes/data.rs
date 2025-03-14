@@ -9,7 +9,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     db::{
-        category::Category, color::Color, course::Course, state::State, task::{Optional, Task}, time::Time, Db, DbCreate, DbReadAll, DbTable, DbUpdate
+        Db, DbCreate, DbReadAll, DbTable, DbUpdate,
+        category::Category,
+        color::Color,
+        course::Course,
+        state::State,
+        task::{Optional, Task},
+        time::Time,
     },
     error::AppError,
 };
@@ -69,19 +75,25 @@ async fn import_v1_0_0(db: Db, data: Data) -> Result<StatusCode, AppError> {
     }
     let mut course_replacements = HashMap::with_capacity(data.courses.capacity());
     for mut course in data.courses {
-        course.color = *color_replacements.get(&course.color).ok_or(StatusCode::BAD_REQUEST)?;
+        course.color = *color_replacements
+            .get(&course.color)
+            .ok_or(StatusCode::BAD_REQUEST)?;
         let id = Course::new(&db, course.data()).await?.id();
         course_replacements.insert(course.id(), id);
     }
     let mut state_replacements = HashMap::with_capacity(data.states.capacity());
     for mut state in data.states {
-        state.color = *color_replacements.get(&state.color).ok_or(StatusCode::BAD_REQUEST)?;
+        state.color = *color_replacements
+            .get(&state.color)
+            .ok_or(StatusCode::BAD_REQUEST)?;
         let id = State::new(&db, state.data()).await?.id();
         state_replacements.insert(state.id(), id);
     }
     let mut category_replacements = HashMap::with_capacity(data.categories.capacity());
     for mut category in data.categories {
-        category.color = *color_replacements.get(&category.color).ok_or(StatusCode::BAD_REQUEST)?;
+        category.color = *color_replacements
+            .get(&category.color)
+            .ok_or(StatusCode::BAD_REQUEST)?;
         let id = Category::new(&db, category.data()).await?.id();
         category_replacements.insert(category.id(), id);
     }
@@ -93,10 +105,38 @@ async fn import_v1_0_0(db: Db, data: Data) -> Result<StatusCode, AppError> {
     let mut task_replacements = HashMap::with_capacity(data.tasks.capacity());
     let mut tasks = Vec::with_capacity(data.tasks.capacity());
     for mut task in data.tasks {
-        task.category = *category_replacements.get(&task.category).ok_or(StatusCode::BAD_REQUEST)?;
-        task.course = Optional(task.course.0.map(|course| course_replacements.get(&course).ok_or(StatusCode::BAD_REQUEST)).transpose()?.copied());
-        task.state = Optional(task.state.0.map(|state| state_replacements.get(&state).ok_or(StatusCode::BAD_REQUEST)).transpose()?.copied());
-        task.time = Optional(task.time.0.map(|time| time_replacements.get(&time).ok_or(StatusCode::BAD_REQUEST)).transpose()?.copied());
+        task.category = *category_replacements
+            .get(&task.category)
+            .ok_or(StatusCode::BAD_REQUEST)?;
+        task.course = Optional(
+            task.course
+                .0
+                .map(|course| {
+                    course_replacements
+                        .get(&course)
+                        .ok_or(StatusCode::BAD_REQUEST)
+                })
+                .transpose()?
+                .copied(),
+        );
+        task.state = Optional(
+            task.state
+                .0
+                .map(|state| {
+                    state_replacements
+                        .get(&state)
+                        .ok_or(StatusCode::BAD_REQUEST)
+                })
+                .transpose()?
+                .copied(),
+        );
+        task.time = Optional(
+            task.time
+                .0
+                .map(|time| time_replacements.get(&time).ok_or(StatusCode::BAD_REQUEST))
+                .transpose()?
+                .copied(),
+        );
         let parent = task.parent.0.take();
         let mut new_task = Task::new(&db, task.data()).await?;
         new_task.parent = Optional(parent);
@@ -104,7 +144,17 @@ async fn import_v1_0_0(db: Db, data: Data) -> Result<StatusCode, AppError> {
         tasks.push(task);
     }
     for mut task in tasks {
-        task.parent = Optional(task.parent.0.map(|parent| task_replacements.get(&parent).ok_or(StatusCode::BAD_REQUEST)).transpose()?.copied());
+        task.parent = Optional(
+            task.parent
+                .0
+                .map(|parent| {
+                    task_replacements
+                        .get(&parent)
+                        .ok_or(StatusCode::BAD_REQUEST)
+                })
+                .transpose()?
+                .copied(),
+        );
         task.save(&db).await?;
     }
     Ok(StatusCode::OK)
