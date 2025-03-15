@@ -1,5 +1,6 @@
 // import {buildCalendar} from './calendar.js'
 // import {addTooltip} from './tooltip.js'
+import {loadCategory, loadColor, loadCourse, loadState, loadTasks} from './REST/client.js'
 
 function setColorBlock(block, color, tooltip) {
 	block.style.background = `${color}`;
@@ -8,11 +9,74 @@ function setColorBlock(block, color, tooltip) {
 	}
 }
 
-async function loadTasks() {
-	
-	const tasks = await fetch("/tasks").then(t => t.json())
+async function getColor(id) {
+	return (await loadColor(id)).fallback
+}
+
+const emptyCourse = {
+	name: '',
+	color: 'white'
+};
+
+async function getCourse(id) {
+	if (id === null || id === undefined) return emptyCourse;
+	let data = await loadCourse(id)
+	return {
+		name: data.name,
+		color: await getColor(data.color)
+	}
+}
+const emptyState = {
+	name: '',
+	color: 'white'
+};
+
+async function getState(id) {
+	if (id === null || id === undefined) return emptyState;
+	let data = await loadState(id)
+	return {
+		name: data.name,
+		color: await getColor(data.color)
+	}
+}
+const emptyCategory = {
+	name: '',
+	color: 'white'
+};
+
+async function getCategory(id) {
+	if (id === null || id === undefined) return emptyCategory;
+	let data = await loadCategory(id)
+	return {
+		name: data.name,
+		color: await getColor(data.color)
+	}
+}
+
+async function loadTaskList() {
+	const tasks = await loadTasks()
+	const template = document.getElementById('entry-template')
+	const body = template.parentElement
+
 
 	for (const task of tasks) {
+		const course = await getCourse(task.course)
+		const category = await getCategory(task.category)
+		const state = await getState(task.state)
+
+		const row = template.content.cloneNode(true)
+		setColorBlock(row.querySelector('.course-block'), course.color, course.name)
+		setColorBlock(row.querySelector('.category-block'), category.color, category.name)
+		setColorBlock(row.querySelector('.state-block'), state.color, state.name)
+
+		row.querySelector('.name-span').innerText = task.name
+		row.querySelector('.id').innerText = task.id
+		row.querySelector('.parent').innerText = task.parent
+		row.querySelector('.course').innerText = course.name
+		row.querySelector('.category').innerText = category.name
+		row.querySelector('.state').innerText = state.name
+
+		body.appendChild(row)
 
 	}
 }
@@ -173,5 +237,5 @@ export function start() {
 	// addEventCatOptions()
 	// loadCalendar()
 
-	loadTasks()
+	loadTaskList()
 }

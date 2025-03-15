@@ -81,7 +81,7 @@ impl DbReadAllPart<TaskFilter> for Task {
     async fn get_all_for(db: &Db, filter: &TaskFilter) -> sqlx::Result<Vec<Self>> {
         // Start with a base query that always evaluates true.
         let mut query = QueryBuilder::new(
-            "SELECT task.id, name, start, end, course, category, state FROM task LEFT JOIN time WHERE time=time.id",
+            "SELECT task.id, name, time, course, category, state, parent FROM task LEFT JOIN time ON task.time=time.id WHERE 1=1",
         );
 
         // Add course filter if provided.
@@ -148,6 +148,8 @@ impl DbReadAllPart<TaskFilter> for Task {
             query.push(" AND end <= ");
             query.push_bind(to);
         }
+
+        tracing::debug!("The query is: {}", query.sql());
 
         // Execute the query.
         let deadlines = query.build_query_as().fetch_all(&db.pool).await?;
