@@ -1,90 +1,147 @@
 // import {buildCalendar} from './calendar.js'
 // import {addTooltip} from './tooltip.js'
-import {loadCategory, loadColor, loadCourse, loadState, loadTasks} from './REST/client.js'
+import {
+	loadCategories,
+	loadCategory,
+	loadColor,
+	loadCourse,
+	loadState,
+	loadTasks,
+} from "./REST/client.js";
 
 function setColorBlock(block, color, tooltip) {
 	block.style.background = `${color}`;
-	if(tooltip) {
-		block.title = tooltip
+	if (tooltip) {
+		block.title = tooltip;
 	}
 }
 
 async function getColor(id) {
-	return (await loadColor(id)).fallback
+	return (await loadColor(id)).fallback;
 }
 
 const emptyCourse = {
-	name: '',
-	color: 'white'
+	name: "",
+	color: "white",
 };
 
 async function getCourse(id) {
 	if (id === null || id === undefined) return emptyCourse;
-	let data = await loadCourse(id)
+	let data = await loadCourse(id);
 	return {
 		name: data.name,
-		color: await getColor(data.color)
-	}
+		color: await getColor(data.color),
+	};
 }
 const emptyState = {
-	name: '',
-	color: 'white'
+	name: "",
+	color: "white",
 };
 
 async function getState(id) {
 	if (id === null || id === undefined) return emptyState;
-	let data = await loadState(id)
+	let data = await loadState(id);
 	return {
 		name: data.name,
-		color: await getColor(data.color)
-	}
+		color: await getColor(data.color),
+	};
 }
 const emptyCategory = {
-	name: '',
-	color: 'white'
+	name: "",
+	color: "white",
 };
 
 async function getCategory(id) {
 	if (id === null || id === undefined) return emptyCategory;
-	let data = await loadCategory(id)
+	let data = await loadCategory(id);
 	return {
 		name: data.name,
-		color: await getColor(data.color)
-	}
+		color: await getColor(data.color),
+	};
 }
 
 async function loadTaskList() {
-	const tasks = await loadTasks()
-	const template = document.getElementById('entry-template')
-	const body = template.parentElement
-
+	const tasks = await loadTasks();
+	const template = document.getElementById("entry-template");
+	const body = template.parentElement;
 
 	for (const task of tasks) {
-		const course = await getCourse(task.course)
-		const category = await getCategory(task.category)
-		const state = await getState(task.state)
+		const course = await getCourse(task.course);
+		const category = await getCategory(task.category);
+		const state = await getState(task.state);
 
-		const row = template.content.cloneNode(true)
-		setColorBlock(row.querySelector('.course-block'), course.color, course.name)
-		setColorBlock(row.querySelector('.category-block'), category.color, category.name)
-		setColorBlock(row.querySelector('.state-block'), state.color, state.name)
+		const row = template.content.cloneNode(true);
+		setColorBlock(
+			row.querySelector(".course-block"),
+			course.color,
+			course.name
+		);
+		setColorBlock(
+			row.querySelector(".category-block"),
+			category.color,
+			category.name
+		);
+		setColorBlock(
+			row.querySelector(".state-block"),
+			state.color,
+			state.name
+		);
 
-		row.querySelector('.name-span').innerText = task.name
-		row.querySelector('.id').innerText = task.id
-		row.querySelector('.parent').innerText = task.parent
-		row.querySelector('.course').innerText = course.name
-		row.querySelector('.category').innerText = category.name
-		row.querySelector('.state').innerText = state.name
+		row.querySelector(".name-span").innerText = task.name;
+		row.querySelector(".id").innerText = task.id;
+		row.querySelector(".parent").innerText = task.parent;
+		row.querySelector(".course").innerText = course.name;
+		row.querySelector(".category").innerText = category.name;
+		row.querySelector(".state").innerText = state.name;
 
-		body.appendChild(row)
+		body.appendChild(row);
+	}
+}
 
+async function loadSelectors() {
+	const categories = await Promise.all(
+		(
+			await loadCategories()
+		).map(async (c) => {
+			const color = await getColor(c.color)
+			const style = `background-color: rgb(from ${color} r g b / 0.2); border: 1px solid rgb(from ${color} r g b / 0.4); width: fit-content;`;
+			const attr = {
+				style
+			}
+			return {
+				value: c.id,
+				text: c.name,
+				// innerAttributes: attr,
+				outerAttributes: attr,
+			};
+		})
+	);
+
+	for (const s of document.querySelectorAll("select.category-select")) {
+		console.log("loading category:", s);
+		new MultiSelect(s, {
+			data: categories,
+			placeholder: "Any category",
+			search: true,
+			selectAll: false,
+			listAll: true,
+			width: "fit-content",
+			dropdownWidth: "300px",
+		});
+
+		// s.innerHTML = ''
+		// for (const c of categories) {
+		// 	const value = document.createElement('li');
+		// 	value.value = c.id
+		// 	value.innerText = c.name;
+		// 	s.appendChild(value)
+		// }
 	}
 }
 
 // async function loadCourses(courseTemplate, COURSES) {
 // 	let courses = await fetch("/courses").then(t => t.json())
 // 	const options = new DocumentFragment()
-	
 
 // 	for (const course of courses) {
 // 		const template = courseTemplate.content.cloneNode(true);
@@ -117,7 +174,7 @@ async function loadTaskList() {
 // 	past_params.append("to", current_date)
 // 	let next_params = new URLSearchParams()
 // 	next_params.append("from", current_date)
-	
+
 // 	let past_deadlines = await fetch("/deadlines?" + past_params).then(t => t.json())
 // 	for (const deadline of past_deadlines) {
 // 		const course = await fetch(`/courses/${deadline.course}`).then(x => x.json())
@@ -144,7 +201,7 @@ async function loadTaskList() {
 // 		option.text = deadline_cat.name
 // 		options.appendChild(option)
 // 	}
-	
+
 // 	for (const selector of document.getElementsByClassName('deadline-cat-select')) {
 // 		selector.appendChild(options.cloneNode(true))
 // 	}
@@ -170,7 +227,7 @@ async function loadTaskList() {
 // 	let ongoing_params = new URLSearchParams()
 // 	ongoing_params.append("end_from", current_date)
 // 	ongoing_params.append("start_to", current_date)
-	
+
 // 	let past_events = await fetch("/events?" + past_params).then(t => t.json())
 // 	for (const event of past_events) {
 // 		const course = await fetch(`/courses/${event.course}`).then(x => x.json())
@@ -204,7 +261,7 @@ async function loadTaskList() {
 // 		option.text = event_cat.name
 // 		options.appendChild(option)
 // 	}
-	
+
 // 	for (const selector of document.getElementsByClassName('event-cat-select')) {
 // 		selector.appendChild(options.cloneNode(true))
 // 	}
@@ -217,7 +274,7 @@ async function loadTaskList() {
 // }
 
 export function start() {
-	const now = new Date()
+	const now = new Date();
 	// const courses = document.getElementById("courses")
 	// const courseTemplate = document.getElementById("course-template")
 	// const DEADLINES = document.getElementById("deadlines")
@@ -227,15 +284,16 @@ export function start() {
 	// const PAST_EVENTS = document.getElementById("past-events")
 	// const NEXT_EVENTS = document.getElementById("next-events")
 	// const ONGOING_EVENTS = document.getElementById("ongoing-events")
-	// const EVENT_TEMPLATE = document.getElementById("event-template")	
-	const NOW_EL = document.getElementById("now")
+	// const EVENT_TEMPLATE = document.getElementById("event-template")
+	const NOW_EL = document.getElementById("now");
 	// loadCourses(courseTemplate, courses);
 	// loadDeadlines(now, PAST_DEADLINES, NEXT_DEADLINES, DEADLINE_TEMPLATE);
 	// loadEvents(now, PAST_EVENTS, NEXT_EVENTS, ONGOING_EVENTS, EVENT_TEMPLATE);
-	NOW_EL.innerText = now.toUTCString()
+	NOW_EL.innerText = now.toUTCString();
 	// addDeadlineCatOptions()
 	// addEventCatOptions()
 	// loadCalendar()
 
-	loadTaskList()
+	loadTaskList();
+	loadSelectors();
 }

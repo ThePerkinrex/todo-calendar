@@ -14,8 +14,8 @@ html {
 }
 
 body {
-	max-width: 800px;
-	width: 50%;
+	max-width: 1200px;
+	width: 80%;
 	border-radius: 1em;
 	background-color: aliceblue;
 	padding: 2em;
@@ -25,49 +25,46 @@ details {
 	margin-left: 1em;
 }
 
-/* Tooltip container */
-.tooltip {
-	position: relative;
-	display: inline-block;
-	/* border-bottom: 1px dotted black; If you want dots under the hoverable text */
-  }
+.tasks {
+	table-layout: fixed;
+	width: calc(100% - 4em);
+	border-collapse: collapse;
+	border: 3px solid black;
+	/* margin: 2em; */
+}
 
-/* Tooltip text */
-.tooltip .tooltiptext {
-	visibility: hidden;
-	width: 120px;
-	background-color: #555e;
-	color: #fff;
+.tasks thead {
+	border-bottom: 2px solid black;
+}
+
+.tasks thead th:nth-child(1) {
+	width: 2em;
+}
+
+.tasks td,th {
 	text-align: center;
-	padding: 5px 0;
-	border-radius: 6px;
-
-	/* Position the tooltip text */
-	position: absolute;
-	z-index: 1;
-	bottom: 125%;
-	left: 50%;
-	margin-left: -60px;
-
-	/* Fade in tooltip */
-	opacity: 0;
-	transition: opacity 0.3s;
 }
 
-/* Tooltip arrow */
-.tooltip .tooltiptext::after {
-	content: "";
-	position: absolute;
-	top: 100%;
-	left: 50%;
-	margin-left: -5px;
-	border-width: 5px;
-	border-style: solid;
-	border-color: #555 transparent transparent transparent;
+.tasks td,th:not(:last-child) {
+	border-right: 1px solid black;
 }
 
-/* Show the tooltip text when you mouse over the tooltip container */
-.tooltip:hover .tooltiptext {
-	visibility: visible;
-	opacity: 1;
+tbody tr:nth-child(even) {
+	background-color: #00000018;
+}
+
+.centered {
+	display: flex;
+	justify-content: center;
+}
+.hidden {
+	display: none;
+}
+
+.filters {
+	margin: 2em;
+}
+
+.filters .select {
+	width: fit-content;
 }

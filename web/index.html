@@ -5,45 +5,64 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>To-dos</title>
 
+	<link rel="stylesheet" href="multiselect/style.css">
+	<script src="/multiselect/lib.js"></script>
+
 	<link rel="stylesheet" href="/calendar.css">
 	<link rel="stylesheet" href="/index.css">
 </head>
 <body>
-	<h1>Task Manager</h1>
-	<a href="/settings.html" class="settings">Settings</a>
 	<script src="/index.js"></script>
-	<span class="loadinfo">Loaded at: <span id="now">Loading</span></span>
-	<table class="tasks">
-		<thead>
-			<tr>
-				<th>ID</th>
-				<th>Name</th>
-				<th>Category</th>
-				<th>Course</th>
-				<th>State</th>
-				<th>Time</th>
-				<th>Parent</th>
-			</tr>
-		</thead>
-		<tbody>
-			<template id="entry-template">
+	<div class="row centered">
+		<h1>Task Manager</h1>
+	</div>
+	<div class="row centered">
+		<a href="/settings.html" class="settings">Settings</a>
+	</div>
+	<div class="row centered">
+		<span class="loadinfo">Loaded at: <span id="now">Loading</span></span>
+	</div>
+	<div class="row filters">
+		<form>
+			<label for="category" class="hidden">Category</label>
+			<select name="category" id="category" class="category-select select">
+				<li value="3">Hello</li>
+			</select>
+		</form>
+	</div>
+	<div class="row centered">
+		<table class="tasks">
+			<thead>
 				<tr>
-					<td class="id"></td>
-					<td class="name">
-						<div class="state-block color-block"></div>
-						<div class="category-block color-block"></div>
-						<div class="course-block color-block"></div>
-						<span class="name-span"></span>
-					</td>
-					<td class="category"></td>
-					<td class="course"></td>
-					<td class="state"></td>
-					<td class="time"></td>
-					<td class="parent"></td>
+					<th>ID</th>
+					<th>Name</th>
+					<th>Category</th>
+					<th>Course</th>
+					<th>State</th>
+					<th>Time</th>
+					<th>Parent</th>
 				</tr>
-			</template>
-		</tbody>
-	</table>
+			</thead>
+			<tbody>
+				<template id="entry-template">
+					<tr>
+						<td class="id"></td>
+						<td class="name">
+							<div class="state-block color-block"></div>
+							<div class="category-block color-block"></div>
+							<div class="course-block color-block"></div>
+							<span class="name-span"></span>
+						</td>
+						<td class="category"></td>
+						<td class="course"></td>
+						<td class="state"></td>
+						<td class="time"></td>
+						<td class="parent"></td>
+					</tr>
+				</template>
+			</tbody>
+		</table>
+	</div>
 	<!-- <details id="data">
 		<summary>Data</summary>
 		<a href="/data" download="todo.json">Export data</a><br>
@@ -130,6 +149,7 @@
 		<summary>Calendar</summary>
 		<div id="weekly-calendar"></div>
 	</details> -->
+	
 	<script type="module">
 		import {start} from '/js/loading.js'
 		start()
