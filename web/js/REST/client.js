@@ -1,11 +1,23 @@
 import { cached } from "./cached.js";
 
 function getJSON(endpoint) {
-	return [(params) => fetch(`${endpoint}?${new URLSearchParams(params).toString()}`).then((x) => x.json()), (params) => new URLSearchParams(params).toString()];
+	return [
+		(params) =>
+			fetch(`${endpoint}?${new URLSearchParams(params).toString()}`).then(
+				(x) => x.json()
+			),
+		(params) => new URLSearchParams(params).toString(),
+	];
 }
 
 function getJSONWithId(endpoint) {
-	return [(id, params) => fetch(`${endpoint}/${id}?${new URLSearchParams(params).toString()}`).then((x) => x.json()), (id, params) => `${id}?${new URLSearchParams(params).toString()}`];
+	return [
+		(id, params) =>
+			fetch(
+				`${endpoint}/${id}?${new URLSearchParams(params).toString()}`
+			).then((x) => x.json()),
+		(id, params) => `${id}?${new URLSearchParams(params).toString()}`,
+	];
 }
 
 const [loadTasks, clearTasks] = cached(...getJSON("/tasks"));

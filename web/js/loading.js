@@ -1,7 +1,6 @@
-import { setupFiltering } from "./filter.js";
+import { applyFilter, setupFiltering } from "./filter.js";
 import { loadSelectors } from "./loading/selectors.js";
-import { loadTaskList } from "./loading/taskList.js";
-
+// import { loadTaskList } from "./loading/taskList.js";
 
 // async function loadCourses(courseTemplate, COURSES) {
 // 	let courses = await fetch("/courses").then(t => t.json())
@@ -158,8 +157,9 @@ export function start() {
 	// addEventCatOptions()
 	// loadCalendar()
 
-	loadTaskList();
 	loadSelectors();
+
+	applyFilter();
 
 	setupFiltering();
 }

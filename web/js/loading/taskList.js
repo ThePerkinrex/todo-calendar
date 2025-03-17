@@ -5,13 +5,13 @@ import { getCourse } from "./course.js";
 import { getState } from "./state.js";
 
 export async function loadTaskList(filter) {
-	console.log('Loading tasks:', filter);
+	console.log("Loading tasks:", filter);
 	const tasks = await loadTasks(filter);
 	const template = document.getElementById("entry-template");
 	const body = template.parentElement;
 
 	for (let i = 1; i < body.children.length; i++) {
-		body.removeChild(body.children[i])
+		body.removeChild(body.children[i]);
 	}
 
 	for (const task of tasks) {
