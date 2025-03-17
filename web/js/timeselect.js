@@ -36,6 +36,7 @@ export class TimeSelect {
 		
 		const hInput = document.createElement('input');
 		hInput.type = 'hidden'
+		hInput.name = name;
 
 		if (this.data[key]) {
 			console.log('Setting', key, this.data[key], this.data[key].toLocalISOString(), this.data[key].toISOString())
@@ -46,13 +47,17 @@ export class TimeSelect {
 
 		input.onchange = () => {
 			this.data.timeFilters.filter(x => x === key)
+			console.log("Time change", name, input.value)
 			if (input.value) {
-				this.data[key] = new LocalDate(input.value)
+				console.log('New value')
+				this.data[key] = new UTCDate(new Date(input.value))
 				hInput.value = this.data[key].toISOString()
 				this.data.timeFilters.push(key)
 				this.excludeNoTime.disabled = false
 			}else{
-				delete hInput.value
+				console.log('Cleared')
+				hInput.removeAttribute('value')
+				console.log(hInput)
 				if(this.data.timeFilters.length == 0) this.excludeNoTime.disabled = true
 			}
 		}

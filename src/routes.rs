@@ -7,6 +7,7 @@ mod courses;
 mod data;
 mod states;
 mod tasks;
+mod times;
 // mod deadlines;
 // mod events;
 
@@ -18,6 +19,7 @@ pub fn router() -> Router {
         .nest("/categories", categories::router())
         .nest("/states", states::router())
         .nest("/tasks", tasks::router())
+        .nest("/times", times::router())
         // .nest("/deadlines", deadlines::router())
         // .nest("/events", events::router())
         .nest("/data", data::router())

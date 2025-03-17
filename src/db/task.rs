@@ -6,7 +6,7 @@ use super::{
     time::{DateTime, TimeId},
 };
 use bon::Builder;
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, QueryBuilder};
 
 #[derive(
@@ -74,7 +74,7 @@ pub struct TaskFilter {
     #[serde(default)]
     pub to_end: Option<DateTime>,
     #[serde(default)]
-    pub exclude_no_time: bool
+    pub exclude_no_time: bool,
 }
 
 impl IdPart<Task> for TaskFilter {}
@@ -158,9 +158,8 @@ impl DbReadAllPart<TaskFilter> for Task {
             query.push_bind(to);
             query.push("))");
         }
-        
-        query.push(")");
 
+        query.push(")");
 
         // Add timestamp upper bound filter.
         if !filter.exclude_no_time {

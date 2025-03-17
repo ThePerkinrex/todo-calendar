@@ -3,6 +3,7 @@ import { getCategory } from "./category.js";
 import { setColorBlock } from "./color.js";
 import { getCourse } from "./course.js";
 import { getState } from "./state.js";
+import { getTime } from "./time.js";
 
 export async function loadTaskList(filter) {
 	console.log("Loading tasks:", filter);
@@ -18,6 +19,7 @@ export async function loadTaskList(filter) {
 		const course = await getCourse(task.course);
 		const category = await getCategory(task.category);
 		const state = await getState(task.state);
+		const time = await getTime(task.time)
 
 		const row = template.content.cloneNode(true);
 		setColorBlock(
@@ -42,6 +44,30 @@ export async function loadTaskList(filter) {
 		row.querySelector(".course").innerText = course.name;
 		row.querySelector(".category").innerText = category.name;
 		row.querySelector(".state").innerText = state.name;
+
+		if (time !== null) {
+			console.log("What time: ", time)
+			const start = new Date(time.start)
+			console.log("start: ", start)
+			if (time.end !== null) {
+				const end = new Date(time.end)
+				
+				const start_date = start.toLocaledateString();
+				const start_time = start.toLocaleTimeString();
+				const end_date = end.toLocaledateString();
+				const end_time = end.toLocaleTimeString();
+				
+				let datestring;
+				if(start_date === end_date) {
+					datestring = `${start_date} ${start_time} - ${end_time}`
+				}else{
+					datestring = `${start_date} ${start_time} - ${end_date} ${end_time}`
+				}
+				row.querySelector(".time").innerText = datestring
+			}else{
+				row.querySelector(".time").innerText = start.toLocaleString();
+			}
+		}
 
 		body.appendChild(row);
 	}

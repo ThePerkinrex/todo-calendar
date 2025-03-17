@@ -30,6 +30,8 @@ const [loadCategories, clearCategories] = cached(...getJSON("/categories"));
 const [loadCategory, clearCategory] = cached(...getJSONWithId("/categories"));
 const [loadStates, clearStates] = cached(...getJSON("/states"));
 const [loadState, clearState] = cached(...getJSONWithId("/states"));
+const loadTime = getJSONWithId("/times")[0];
+
 
 export {
 	loadTasks,
@@ -52,4 +54,5 @@ export {
 	loadState,
 	clearStates,
 	clearState,
+	loadTime
 };
