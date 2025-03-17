@@ -49,3 +49,15 @@
 .timeselect-content-grid label {
 	justify-self: end;
 }
+
+.timeselect-include-no-time {
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-start;
+	gap: 1em;
+	margin: 1em;
+}
+
+.timeselect-exclude-no-time label {
+	text-align: right;
+}

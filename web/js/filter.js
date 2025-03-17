@@ -4,8 +4,9 @@ export async function applyFilter(form) {
 	if (form === undefined) form = getFilterForm();
 
 	const data = new FormData(form);
-	data.append('from_end', new Date().toISOString()) // FIXME Timezones?
-	data.append('include_no_time', true)
+	console.log('Applying filter: ', data)
+	// data.append('from_end', new Date().toISOString()) // FIXME Timezones?
+	// data.append('include_no_time', true)
 	await loadTaskList(data);
 }
 
