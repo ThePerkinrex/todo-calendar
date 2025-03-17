@@ -63,6 +63,10 @@ tbody tr:nth-child(even) {
 
 .filters {
 	margin: 2em;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	gap: 0.5em;
 }
 
 .filters .select {

@@ -102,7 +102,7 @@ class MultiSelect {
                 ${this.selectedValues
 					.map(
 						(value) =>
-							`<input type="hidden" name="${this.name}[]" value="${value}">`
+							`<input type="hidden" name="${this.name}" value="${value}">`
 					)
 					.join("")}
                 <div class="multi-select-header" style="${
@@ -207,7 +207,7 @@ class MultiSelect {
 							.querySelector(".multi-select")
 							.insertAdjacentHTML(
 								"afterbegin",
-								`<input type="hidden" name="${this.name}[]" value="${option.dataset.value}">`
+								`<input type="hidden" name="${this.name}" value="${option.dataset.value}">`
 							);
 						this.data.filter(
 							(data) => data.value == option.dataset.value
@@ -393,13 +393,14 @@ class MultiSelect {
 							.querySelector(".multi-select-header")
 							.insertAdjacentHTML(
 								"afterbegin",
-								`<span class="multi-select-header-option" data-value="${
-									option.dataset.value
-								}">${
-									option.querySelector(
-										".multi-select-option-text"
-									).innerHTML
-								}</span>`
+								this._generateHeaderOption(option)
+								// `<span class="multi-select-header-option" data-value="${
+								// 	option.dataset.value
+								// }">${
+								// 	option.querySelector(
+								// 		".multi-select-option-text"
+								// 	).innerHTML
+								// }</span>`
 							);
 					}
 				});

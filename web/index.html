@@ -22,14 +22,14 @@
 	<div class="row centered">
 		<span class="loadinfo">Loaded at: <span id="now">Loading</span></span>
 	</div>
-	<div class="row filters">
-		<form>
-			<label for="category" class="hidden">Category</label>
+	<form class="row filters" id="filter-form">
+			<!-- <label for="category" class="hidden">Category</label> -->
 			<select name="category" id="category" class="category-select select">
-				<li value="3">Hello</li>
 			</select>
-		</form>
-	</div>
+			<select name="state" id="state" class="state-select select"></select>
+			<select name="course" id="course" class="course-select select"></select>
+			<button type="submit">Apply</button>
+	</form>
 	<div class="row centered">
 		<table class="tasks">
 			<thead>
