@@ -1,4 +1,5 @@
-import { loadCategories, loadCourses, loadStates } from "../REST/client.js";
+import { loadCategories, loadCourses, loadStates, loadTasks } from "../REST/client.js";
+import { TimeSelect } from "../timeselect.js";
 import { getColor } from "./color.js";
 
 const config = {
@@ -9,7 +10,7 @@ const config = {
 	dropdownWidth: "300px",
 };
 
-export async function loadSelectors() {
+async function loadCategorySelectors() {
 	const categories = await Promise.all(
 		(
 			await loadCategories()
@@ -35,7 +36,9 @@ export async function loadSelectors() {
 			placeholder: "Any category",
 		});
 	}
+}
 
+async function loadStateSelectors() {
 	const states = await Promise.all(
 		(
 			await loadStates()
@@ -62,7 +65,9 @@ export async function loadSelectors() {
 			placeholder: "Any state",
 		});
 	}
+}
 
+async function loadCourseSelectors() {
 	const courses = await Promise.all(
 		(
 			await loadCourses()
@@ -88,4 +93,41 @@ export async function loadSelectors() {
 			placeholder: "Any course",
 		});
 	}
+}
+
+async function loadParentSelectors() {
+	const tasks = await Promise.all(
+		(
+			await loadTasks()
+		).map(async (c) => {
+			return {
+				value: c.id,
+				text: c.name,
+			};
+		})
+	);
+
+	for (const s of document.querySelectorAll("select.parent-select")) {
+		new MultiSelect(s, {
+			...config,
+			data: tasks,
+			placeholder: "Any parent",
+		});
+	}
+}
+
+async function loadTimeSelectors() {
+	for (const s of document.querySelectorAll(".time-select")) {
+		new TimeSelect(s)
+	}
+}
+
+export async function loadSelectors() {
+	await Promise.all([
+		loadCategorySelectors(),
+		loadStateSelectors(),
+		loadCourseSelectors(),
+		loadParentSelectors(),
+		loadTimeSelectors()
+	])
 }

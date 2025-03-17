@@ -64,7 +64,7 @@ pub struct TaskFilter {
     pub state: Vec<StateId>,
     #[builder(field)]
     #[serde(default)]
-    pub parents: Vec<TaskId>,
+    pub parent: Vec<TaskId>,
     #[serde(default)]
     pub from_start: Option<DateTime>,
     #[serde(default)]
@@ -73,12 +73,15 @@ pub struct TaskFilter {
     pub from_end: Option<DateTime>,
     #[serde(default)]
     pub to_end: Option<DateTime>,
+    #[serde(default)]
+    pub include_no_time: bool
 }
 
 impl IdPart<Task> for TaskFilter {}
 
 impl DbReadAllPart<TaskFilter> for Task {
     async fn get_all_for(db: &Db, filter: &TaskFilter) -> sqlx::Result<Vec<Self>> {
+        tracing::info!("The filter is: {filter:#?}");
         // Start with a base query that always evaluates true.
         let mut query = QueryBuilder::new(
             "SELECT task.id, name, time, course, category, state, parent FROM task LEFT JOIN time ON task.time=time.id WHERE 1=1",
@@ -116,14 +119,15 @@ impl DbReadAllPart<TaskFilter> for Task {
         }
 
         // Add parent filter if provided.
-        if !filter.parents.is_empty() {
+        if !filter.parent.is_empty() {
             query.push(" AND parent IN (");
             let mut separated = query.separated(", ");
-            for parent_id in &filter.parents {
+            for parent_id in &filter.parent {
                 separated.push_bind(parent_id);
             }
             query.push(")");
         }
+        query.push(" AND ((1=1");
 
         // Add timestamp lower bound filter.
         if let Some(from) = &filter.from_start {
@@ -139,17 +143,32 @@ impl DbReadAllPart<TaskFilter> for Task {
 
         // Add timestamp lower bound filter.
         if let Some(from) = &filter.from_end {
-            query.push(" AND end >= ");
+            query.push(" AND ((end >= ");
             query.push_bind(from);
+            query.push(") OR (end IS NULL AND start >= ");
+            query.push_bind(from);
+            query.push("))");
         }
 
         // Add timestamp upper bound filter.
         if let Some(to) = &filter.to_end {
-            query.push(" AND end <= ");
+            query.push(" AND ((end <= ");
             query.push_bind(to);
+            query.push(") OR (end IS NULL AND start <= ");
+            query.push_bind(to);
+            query.push("))");
         }
+        
+        query.push(")");
 
-        tracing::debug!("The query is: {}", query.sql());
+
+        // Add timestamp upper bound filter.
+        if filter.include_no_time {
+            query.push(" OR task.time IS NULL");
+        }
+        query.push(")");
+
+        tracing::info!("The query is: \n\t{}", query.sql());
 
         // Execute the query.
         let deadlines = query.build_query_as().fetch_all(&db.pool).await?;
