@@ -13,7 +13,6 @@ use crate::{
     error::AppError,
 };
 
-
 pub fn router() -> Router {
     Router::new()
         .route("/", get(all))

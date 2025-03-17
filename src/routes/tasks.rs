@@ -14,7 +14,6 @@ use crate::{
     error::AppError,
 };
 
-
 pub fn router() -> Router {
     Router::new()
         .route("/", get(all))
@@ -24,10 +23,7 @@ pub fn router() -> Router {
         .route("/{id}", delete(delete_course))
 }
 
-async fn all(
-    db: Db,
-    Query(filter): Query<TaskFilter>,
-) -> Result<Json<Vec<Task>>, AppError> {
+async fn all(db: Db, Query(filter): Query<TaskFilter>) -> Result<Json<Vec<Task>>, AppError> {
     let tasks = Task::get_all_for(&db, &filter).await?;
     // tasks.sort_by(|a, b| a..cmp(&b.timestamp));
     Ok(Json(tasks))
@@ -42,18 +38,14 @@ async fn update(
     Path(id): Path<TaskId>,
     Json(data): Json<TaskData>,
 ) -> Result<StatusCode, AppError> {
-    let mut course = Task::get(&db, &id)
-        .await?
-        .ok_or(StatusCode::NOT_FOUND)?;
+    let mut course = Task::get(&db, &id).await?.ok_or(StatusCode::NOT_FOUND)?;
     course.set(data);
     course.save(&db).await?;
     Ok(StatusCode::OK)
 }
 
 async fn single(db: Db, Path(id): Path<TaskId>) -> Result<Json<Task>, AppError> {
-    let course = Task::get(&db, &id)
-        .await?
-        .ok_or(StatusCode::NOT_FOUND)?;
+    let course = Task::get(&db, &id).await?.ok_or(StatusCode::NOT_FOUND)?;
     Ok(Json(course))
 }
 

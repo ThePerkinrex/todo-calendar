@@ -1,10 +1,10 @@
 use axum::{Router, response::Redirect, routing::get};
 use tower_http::services::ServeDir;
 
+mod categories;
+mod colors;
 mod courses;
 mod data;
-mod colors;
-mod categories;
 mod states;
 mod tasks;
 // mod deadlines;

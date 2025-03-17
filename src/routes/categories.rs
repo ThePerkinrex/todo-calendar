@@ -35,14 +35,18 @@ async fn update(
     Path(id): Path<CategoryId>,
     Json(data): Json<CategoryData>,
 ) -> Result<StatusCode, AppError> {
-    let mut course = Category::get(&db, &id).await?.ok_or(StatusCode::NOT_FOUND)?;
+    let mut course = Category::get(&db, &id)
+        .await?
+        .ok_or(StatusCode::NOT_FOUND)?;
     course.set(data);
     course.save(&db).await?;
     Ok(StatusCode::OK)
 }
 
 async fn single(db: Db, Path(id): Path<CategoryId>) -> Result<Json<Category>, AppError> {
-    let course = Category::get(&db, &id).await?.ok_or(StatusCode::NOT_FOUND)?;
+    let course = Category::get(&db, &id)
+        .await?
+        .ok_or(StatusCode::NOT_FOUND)?;
     Ok(Json(course))
 }
 
