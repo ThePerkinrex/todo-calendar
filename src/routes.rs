@@ -1,5 +1,6 @@
-use axum::{Router, response::Redirect, routing::get};
+use axum::Router;
 use tower_http::services::ServeDir;
+use web::get_pages;
 
 mod categories;
 mod colors;
@@ -8,6 +9,7 @@ mod data;
 mod states;
 mod tasks;
 mod times;
+mod web;
 // mod deadlines;
 // mod events;
 
@@ -23,6 +25,9 @@ pub fn router() -> Router {
         // .nest("/deadlines", deadlines::router())
         // .nest("/events", events::router())
         .nest("/data", data::router())
-        .route("/", get(async || Redirect::to("/index.html")))
-        .fallback_service(ServeDir::new("web"))
+        .nest_service("/lib", ServeDir::new("web/lib/"))
+        .nest_service("/js", ServeDir::new("web/js/"))
+        .nest_service("/styles", ServeDir::new("web/styles/"))
+        // .route("/", get(async || Redirect::to("/index.html")))
+        .merge(get_pages("web/pages/").unwrap())
 }

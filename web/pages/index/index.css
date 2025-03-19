@@ -1,26 +1,3 @@
-.color-block {
-	width: 0.7em;
-	height: 0.7em;
-	border-radius: 0.2em;
-	display: inline-block;
-	box-sizing: border-box;
-}
-
-html {
-	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-	display: flex;
-	justify-content: center;
-	background-color: white;
-}
-
-body {
-	max-width: 1200px;
-	width: 80%;
-	border-radius: 1em;
-	background-color: aliceblue;
-	padding: 2em;
-}
-
 details {
 	margin-left: 1em;
 }
@@ -51,14 +28,6 @@ details {
 
 tbody tr:nth-child(even) {
 	background-color: #00000018;
-}
-
-.centered {
-	display: flex;
-	justify-content: center;
-}
-.hidden {
-	display: none;
 }
 
 .filters {

@@ -11,13 +11,13 @@ chrono = { version = "0.4.40", features = ["serde"] }
 dotenvy = "0.15.7"
 sqlx = { version = "0.8.3", features = ["chrono", "macros", "runtime-tokio", "sqlite"] }
 thiserror = "2.0.12"
-tokio = { version = "1.44.0", features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.44.1", features = ["rt-multi-thread", "macros"] }
 tower = "0.5.2"
 tracing = "0.1.41"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 db-macros = { path = "./db-macros"}
 tower-http = { version = "0.6.2", features = ["trace", "fs"] }
-serde = { version = "1.0.218", features = ["derive"] }
+serde = { version = "1.0.219", features = ["derive"] }
 chrono-tz = "0.10.1"
-bon = "3.4.0"
+bon = "3.5.0"
 axum-extra = { version = "0.10.0", features = ["query"] }

@@ -5,21 +5,23 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>To-dos</title>
 
-	<link rel="stylesheet" href="multiselect/style.css">
-	<script src="/multiselect/lib.js"></script>
+	<link rel="stylesheet" href="/lib/multiselect/style.css">
+	<script src="/lib/multiselect/lib.js"></script>
 
-	<link rel="stylesheet" href="/timeselect.css">
-	<link rel="stylesheet" href="/calendar.css">
-	<link rel="stylesheet" href="/index.css">
+	<link rel="stylesheet" href="/styles/base.css">
+	<link rel="stylesheet" href="/styles/timeselect.css">
+	<link rel="stylesheet" href="/styles/calendar.css">
+	<link rel="stylesheet" href="index.css">
 </head>
 <body>
-	<script src="/index.js"></script>
+	<script src="index.js"></script>
 	<div class="row centered">
 		<h1>Task Manager</h1>
 	</div>
-	<div class="row centered">
-		<a href="/settings.html" class="settings">Settings</a>
-	</div>
+	<nav class="row centered">
+		<a href="/settings" class="settings">Settings</a>
+		<a href="/add" class="settings">Add task</a>
+	</nav>
 	<div class="row centered">
 		<span class="loadinfo">Loaded at: <span id="now">Loading</span></span>
 	</div>
