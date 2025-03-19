@@ -5,6 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Add | To-dos</title>
 
+	<link rel="stylesheet" href="/lib/select/style.css">
+	
 	<link rel="stylesheet" href="/styles/base.css">
 	<link rel="stylesheet" href="index.css">
 </head>
@@ -18,12 +20,16 @@
 	</nav>
 	<form id="task-form">
 		<label for="name">Name</label><input type="text" name="name" id="name"/>
-		<label for="category">Category</label><select name="category" id="category" class="html-select"></select>
-		<label for="course">Course</label><select name="course" id="course" class="html-select"><option>None</option></select>
-		<label for="state">State</label><select name="state" id="state" class="html-select"><option>None</option></select>
-		<label for="parent">Parent</label><select name="parent" id="parent" class="html-select"><option>None</option></select>
+		<label for="category">Category</label><select name="category" id="category" class="html-select" data-source="category"></select>
+		<label for="course">Course</label><select name="course" id="course" class="html-select" data-optional="None" data-source="course"></select>
+		<label for="state">State</label><select name="state" id="state" class="html-select" data-optional="None" data-source="state"></select>
+		<label for="parent">Parent</label><select name="parent" id="parent" class="html-select" data-optional="None" data-source="task"></select>
 		<!-- TODO Time -->
 	</form>
-	<script type="module" src="index.js"></script>
+	<script type="module">
+		import {main} from '/add/index.js'
+
+		main()
+	</script>
 </body>
 </html>

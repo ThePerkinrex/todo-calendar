@@ -1,11 +1,19 @@
-class Select {
+export class Select {
 	constructor(element, data = [], options = {}) {
-		const defaultOptions = {hasNone: element.dataset.optional === undefined, noneText:  element.dataset.optional ? element.dataset.optional : 'None', selected: undefined}
+		const defaultOptions = {hasNone: element.dataset.optional !== undefined, noneText:  element.dataset.optional ? element.dataset.optional : 'None', selected: undefined}
 		this.options = {...defaultOptions, ...options}
 		this.data = data
 		this.name = element.name
 		this.id = element.id
+		if (!this.id) {
+			this.id = "select-" + Math.floor(Math.random() * 1000000);
+		}
 		this.classList = element.classList
+		this.element = element
+
+		if(!this.options.hasNone) {
+			this.options.selected = 0
+		}
 
 		let i = 0;
 		for(const e of element.children) {
@@ -14,12 +22,44 @@ class Select {
 				content: e.innerHTML
 			})
 			if(e.selected) {
-				this.options.selectedValue = e.value
+				this.options.selected = i
 			}
 			i++
 		}
 
 		this.build()
+		document.addEventListener('click', (ev) => this._on_click_outside(ev))
+	}
+
+	_on_click_outside(ev) {
+		if (
+			!ev.target.closest("#" + this.id) &&
+			!ev.target.closest('label[for="' + this.id + '"]')
+		) {
+			this.dropdown.classList.remove('select-open')
+		}
+		
+	}
+
+	_on_click_header(ev) {
+		this.dropdown.classList.add('select-open')
+		ev.stopPropagation()
+	}
+
+	_on_click_element(element) {
+		const i = element.dataset.idx
+		this.options.selected = i
+		if(i === undefined) {
+			this.input.removeAttribute('value')
+		}else{
+			this.input.value = this.data[i].value
+		}
+		this.header.innerHTML = element.innerHTML
+		for(const e of this.element.querySelectorAll('.select-selected')) {
+			e.classList.remove('select-selected')
+		}
+		element.classList.add('select-selected')
+		this.dropdown.classList.remove('select-open')
 	}
 
 	build() {
@@ -42,6 +82,8 @@ class Select {
 		header.classList.add('select-header')
 		if(this.options.selected !== undefined) {
 			header.innerHTML = this.data[this.options.selected].content
+		}else{
+			header.innerHTML = this.options.noneText
 		}
 
 		this.header = header
@@ -57,6 +99,7 @@ class Select {
 				e.dataset.selected = true
 			}
 			e.innerHTML = this.options.noneText
+			e.onclick = () => this._on_click_element(e)
 
 			dropdown.appendChild(e)
 		}
@@ -71,14 +114,16 @@ class Select {
 			e.dataset.value = d.value
 			e.innerHTML = d.content
 			e.dataset.idx = i
+			e.onclick = () => this._on_click_element(e)
 			dropdown.appendChild(e)
 		}
 
-		this.dropdown = dropdown
 		container.appendChild(dropdown)
 
-
 		this.element.replaceWith(container)
-		
+		this.element = container
+		this.header.onclick = (ev) => this._on_click_header(ev)
+		this.dropdown = dropdown
+		console.log(this)
 	}
 }
