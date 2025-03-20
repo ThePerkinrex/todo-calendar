@@ -6,6 +6,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 mod db;
 mod error;
 mod routes;
+mod router;
 
 const ADDR: &str = "127.0.0.1:5010";
 
