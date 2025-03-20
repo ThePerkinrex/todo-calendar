@@ -1,0 +1,26 @@
+#task-form {
+	display: grid;
+	grid-template-columns: auto auto;
+	gap: 1em;
+	justify-content: center;
+	margin: 2em;
+}
+
+#task-form label {
+	justify-self: end;
+}
+
+#task-form .time {
+	display: flex;
+	gap: 1em;
+	flex-direction: row;
+}
+
+#task-form .time input[type="datetime-local"] {
+	flex-grow: 1;
+}
+
+#task-form button[type="submit"] {
+	grid-column: 1 / -1;
+	justify-self: center;
+}

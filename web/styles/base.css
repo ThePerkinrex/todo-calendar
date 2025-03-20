@@ -33,3 +33,31 @@ nav.centered {
 .hidden {
 	display: none;
 }
+
+input,button {
+	padding: 0.25rem;
+	border: 1px solid gray;
+	border-radius: 5px;
+	background-color: white;
+	height: 2rem;
+	box-sizing: border-box;
+}
+
+button {
+	padding-left: 1rem;
+	padding-right: 1rem;
+}
+
+button[type="submit"] {
+	background-color: rgb(0, 0, 114);
+	color: white;
+	font-weight: bold;
+}
+
+button[type="submit"]:hover {
+	background-color: rgb(14, 14, 85);
+}
+
+button[type="submit"]:active {
+	background-color: rgb(12, 12, 51);
+}

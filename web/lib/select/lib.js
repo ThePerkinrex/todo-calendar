@@ -10,6 +10,7 @@ export class Select {
 		}
 		this.classList = element.classList
 		this.element = element
+		this.justClicked = false
 
 		if(!this.options.hasNone) {
 			this.options.selected = 0
@@ -32,18 +33,23 @@ export class Select {
 	}
 
 	_on_click_outside(ev) {
+		
 		if (
 			!ev.target.closest("#" + this.id) &&
 			!ev.target.closest('label[for="' + this.id + '"]')
 		) {
-			this.dropdown.classList.remove('select-open')
+			if(this.justClicked) {
+				this.justClicked = false
+			}else{
+				this.dropdown.classList.remove('select-open')
+			}
 		}
 		
 	}
 
-	_on_click_header(ev) {
+	_on_click_header() {
 		this.dropdown.classList.add('select-open')
-		ev.stopPropagation()
+		// this.justClicked = true
 	}
 
 	_on_click_element(element) {
@@ -73,6 +79,9 @@ export class Select {
 		input.name = this.name
 		if(this.options.selected !== undefined) {
 			input.value = this.data[this.options.selected].value
+		}
+		if(!this.options.hasNone) {
+			input.required = true
 		}
 		this.input = input
 

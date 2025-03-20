@@ -41,3 +41,8 @@ tbody tr:nth-child(even) {
 .filters .select {
 	width: fit-content;
 }
+
+.filters button[type="submit"] {
+	align-self: stretch;
+	height: auto;
+}

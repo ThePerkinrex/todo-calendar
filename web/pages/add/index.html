@@ -8,7 +8,7 @@
 	<link rel="stylesheet" href="/lib/select/style.css">
 	
 	<link rel="stylesheet" href="/styles/base.css">
-	<link rel="stylesheet" href="index.css">
+	<link rel="stylesheet" href="/add/index.css">
 </head>
 <body>
 	<div class="row centered">
@@ -19,12 +19,15 @@
 		<a href="/" class="settings">Back</a>
 	</nav>
 	<form id="task-form">
-		<label for="name">Name</label><input type="text" name="name" id="name"/>
+		<label for="name">Name</label><input type="text" name="name" id="name" required/>
 		<label for="category">Category</label><select name="category" id="category" class="html-select" data-source="category"></select>
 		<label for="course">Course</label><select name="course" id="course" class="html-select" data-optional="None" data-source="course"></select>
 		<label for="state">State</label><select name="state" id="state" class="html-select" data-optional="None" data-source="state"></select>
 		<label for="parent">Parent</label><select name="parent" id="parent" class="html-select" data-optional="None" data-source="task"></select>
+		<label for="startTime">Start Time</label><div class="time"><button id="startTimeNow" class="now-btn" type="button">Now</button><input type="datetime-local" id="startTime" name="start"></div>
+		<label for="endTime">End Time</label><div class="time"><button id="endTimeNow" class="now-btn" type="button" disabled>Now</button><input type="datetime-local" id="endTime" name="end" disabled></div>
 		<!-- TODO Time -->
+		<button type="submit">Add task</button>
 	</form>
 	<script type="module">
 		import {main} from '/add/index.js'

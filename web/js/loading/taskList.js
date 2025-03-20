@@ -11,8 +11,13 @@ export async function loadTaskList(filter) {
 	const template = document.getElementById("entry-template");
 	const body = template.parentElement;
 
-	for (let i = 1; i < body.children.length; i++) {
-		body.removeChild(body.children[i]);
+	for (let i = body.children.length - 1; i >= 0; i--) {
+		const child = body.children[i];
+		// console.log('children', child)
+		if(child.tagName.toLowerCase() !== 'template') {
+			// console.log('removing', child)
+			body.removeChild(child);
+		}
 	}
 
 	for (const task of tasks) {
