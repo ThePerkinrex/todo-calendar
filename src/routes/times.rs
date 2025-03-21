@@ -1,5 +1,5 @@
 use axum::{
-    Json, Router,
+    Json,
     extract::Path,
     http::StatusCode,
     routing::{delete, get, post, put},
@@ -11,15 +11,17 @@ use crate::{
         time::{Time, TimeData, TimeId},
     },
     error::AppError,
+    path,
+    router::Router,
 };
 
-pub fn router() -> Router {
+pub fn router<'a>() -> Router<'a> {
     Router::new()
-        .route("/", get(all))
-        .route("/", post(add))
-        .route("/{id}", get(single))
-        .route("/{id}", put(update))
-        .route("/{id}", delete(delete_course))
+        .route("all", path!(/), get(all))
+        .route("post", path!(/), post(add))
+        .route("get", path!(/{id}), get(single))
+        .route("put", path!(/{id}), put(update))
+        .route("delete", path!(/{id}), delete(delete_course))
 }
 
 async fn all(db: Db) -> Result<Json<Vec<Time>>, AppError> {

@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use axum::{
-    Json, Router,
+    Json,
     http::StatusCode,
     routing::{delete, get, post},
 };
@@ -18,6 +18,8 @@ use crate::{
         time::Time,
     },
     error::AppError,
+    path,
+    router::Router,
 };
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -43,11 +45,11 @@ enum VersionedData {
     V1_0_0(Data),
 }
 
-pub fn router() -> Router {
+pub fn router<'a>() -> Router<'a> {
     Router::new()
-        .route("/", get(export))
-        .route("/", post(import))
-        .route("/", delete(clear))
+        .route("export", path!(/), get(export))
+        .route("import", path!(/), post(import))
+        .route("delete", path!(/), delete(clear))
 }
 
 async fn export(db: Db) -> Result<Json<VersionedData>, AppError> {

@@ -1,12 +1,14 @@
 use db::{Db, DbLayer};
+use heck::{ToLowerCamelCase, ToPascalCase};
+use router::path::PathSegment;
 use tower_http::trace::TraceLayer;
 use tracing::error;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod db;
 mod error;
-mod routes;
 mod router;
+mod routes;
 
 const ADDR: &str = "127.0.0.1:5010";
 
@@ -38,9 +40,45 @@ async fn main() {
         .layer(DbLayer::new(db))
         .layer(TraceLayer::new_for_http());
 
+    let mut b = JsFunctionBuilder::default();
+    app.visit(&mut b);
+
+    std::fs::write("web/js/REST/paths.js", b.result).unwrap();
+
+    let app = axum::Router::from(app);
+
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind(ADDR).await.unwrap();
     tracing::debug!("listening on http://{}", listener.local_addr().unwrap());
 
     axum::serve(listener, app).await.unwrap();
+}
+
+#[derive(Debug, Default)]
+pub struct JsFunctionBuilder {
+    result: String,
+}
+
+impl router::PathVisitor<'_> for JsFunctionBuilder {
+    fn visit(&mut self, name: &str, path: &router::path::Path<'_>) {
+        let x = format!(
+            "\n// {path}\nexport function {}({}) {{ return `{}` }}\n",
+            name.to_lower_camel_case(),
+            path.iter()
+                .filter_map(|x| if let PathSegment::RegParam(x) = x {
+                    Some(format!("{x}, "))
+                } else {
+                    None
+                })
+                .collect::<String>(),
+            path.iter()
+                .map(|x| match x {
+                    PathSegment::Normal(cow) => format!("/{cow}"),
+                    PathSegment::RegParam(cow) => format!("/${{{cow}}}"),
+                })
+                .chain(std::iter::once_with(|| "/".into()))
+                .collect::<String>()
+        );
+        self.result.push_str(&x);
+    }
 }

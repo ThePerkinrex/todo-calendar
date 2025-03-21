@@ -2001,6 +2001,7 @@ dependencies = [
  "chrono-tz",
  "db-macros",
  "dotenvy",
+ "heck",
  "serde",
  "sqlx",
  "thiserror",
