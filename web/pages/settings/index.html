@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Settings | To-dos</title>
+
+		<link rel="stylesheet" href="/lib/select/style.css">
+
+		<link rel="stylesheet" href="/styles/base.css">
+		<link rel="stylesheet" href="index.css">
+	</head>
+
+	<body>
+		<div class="row centered">
+			<h1>Task Manager</h1>
+		</div>
+		<nav class="row centered">
+			<a href="/" class="settings">Back</a>
+		</nav>
+		<div class="data">
+			<details open class="categories">
+				<summary>Categories</summary>
+				<form data-submit="category">
+					<label for="cat-name">Name:</label><input type="text" name="name" id="cat-name" class="name">
+					<label for="cat-color">Color:</label><select name="color" id="cat-color"
+						class="html-select color"></select>
+					<button type="submit">Add category</button>
+				</form>
+				<template>
+					<div class="color-block"></div><span class="name"></span>
+				</template>
+				<ul></ul>
+			</details>
+			<details open class="courses">
+				<summary>Courses</summary>
+				<form data-submit="course">
+					<label for="course-name">Name:</label><input type="text" name="name" id="course-name" class="name">
+					<label for="course-color">Color:</label><select name="color" id="course-color"
+						class="html-select color"></select>
+					<button type="submit">Add course</button>
+				</form>
+				<template>
+					<div class="color-block"></div><span class="name"></span>
+				</template>
+				<ul></ul>
+			</details>
+			<details open class="states">
+				<summary>States</summary>
+				<form data-submit="state">
+					<label for="state-name">Name:</label><input type="text" name="name" id="state-name" class="name">
+					<label for="state-color">Color:</label><select name="color" id="state-color"
+						class="html-select color"></select>
+					<button type="submit">Add state</button>
+				</form>
+				<template>
+					<div class="color-block"></div><span class="name"></span>
+				</template>
+				<ul></ul>
+			</details>
+			<details open class="colors">
+				<summary>Colors</summary>
+				<form data-submit="color">
+					<label for="color-name">Name:</label><input type="text" name="name" id="color-name" class="name">
+					<label for="color-color">Color:</label><input type="color" name="color" id="color-color">
+					<button type="submit">Add color</button>
+				</form>
+				<template>
+					<div class="color-block"></div><span class="name"></span>
+				</template>
+				<ul></ul>
+			</details>
+		</div>
+		<script type="module">
+			import { main } from './index.js'
+
+			main()
+		</script>
+	</body>
+
+</html>
