@@ -1,16 +1,42 @@
-import requests
+import requests, json, pathlib, datetime
 
 BASE_URL = 'http://localhost:5010/api/v1'
+CACHE_LOCATION = 'cache.json'
+
 
 def get_json(path):
 	r =  requests.get(BASE_URL + path)
 	r.raise_for_status()
 	return r.json()
+class Cache:
+	def __init__(self, location = CACHE_LOCATION):
+		self.p = pathlib.Path(location)
+		if self.p.exists():
+			with open(self.p) as f:
+				self.data = json.load(f)
+		else:
+			self.data = {}
+	
+	def save(self):
+		with open(self.p, 'w') as f:
+			json.dump(self.data, f, indent='\t', sort_keys=True)
+	
+	def get(self, path, getter = get_json):
+		str_path = str(path)
+		if str_path not in self.data or self.data[str_path]['time'] < datetime.datetime.now().timestamp() - 15 * 60:
+			self.data[str_path] = {
+				'time': datetime.datetime.now().timestamp(),
+				'data': getter(path)
+			}
+			self.save()
+		return self.data[str_path]['data']
+
+CACHE = Cache()
 
 def get_colors():
 	print('Getting colors')
 	try:
-		return get_json('/colors/')
+		return CACHE.get('/colors/')
 	except Exception as e:
 		print("Error: " + e)
 		return [
@@ -99,7 +125,7 @@ def get_colors():
 def get_courses():
 	print('Getting courses')
 	try:
-		return get_json('/courses/')
+		return CACHE.get('/courses/')
 	except Exception as e:
 		print("Error: " + e)
 		return [{"id":1,"name":"Autonomous Racing Cars","color":2},{"id":2,"name":"Distributed System Technologies","color":7},{"id":3,"name":"TFG","color":9},{"id":4,"name":"Web Engineering","color":15}]
@@ -107,7 +133,7 @@ def get_courses():
 def get_categories():
 	print('Getting categories')
 	try:
-		return get_json('/categories/')
+		return CACHE.get('/categories/')
 	except Exception as e:
 		print("Error: " + e)
 		return [
@@ -142,7 +168,7 @@ def get_categories():
 def get_states():
 	print('Getting states')
 	try:
-		return get_json('/states/')
+		return CACHE.get('/states/')
 	except Exception as e:
 		print("Error: " + e)
 		return [

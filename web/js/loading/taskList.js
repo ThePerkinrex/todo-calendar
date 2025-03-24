@@ -57,9 +57,9 @@ export async function loadTaskList(filter) {
 			if (time.end !== null) {
 				const end = new Date(time.end)
 				
-				const start_date = start.toLocaledateString();
+				const start_date = start.toLocaleDateString();
 				const start_time = start.toLocaleTimeString();
-				const end_date = end.toLocaledateString();
+				const end_date = end.toLocaleDateString();
 				const end_time = end.toLocaleTimeString();
 				
 				let datestring;
