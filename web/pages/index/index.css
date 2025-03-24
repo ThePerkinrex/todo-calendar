@@ -46,3 +46,12 @@ tbody tr:nth-child(even) {
 	align-self: stretch;
 	height: auto;
 }
+
+.span-stretched {
+	display: inline-flex;
+	justify-content: space-between;
+}
+
+.name > span {
+	width: 100%;
+}
