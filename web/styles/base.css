@@ -61,3 +61,35 @@ button[type="submit"]:hover {
 button[type="submit"]:active {
 	background-color: rgb(12, 12, 51);
 }
+
+.kanban {
+	display: flex;
+	flex-direction: row;
+}
+
+.kanban-column {
+	display: flex;
+	flex-grow: 1;
+	flex-direction: column;
+	border-left: 1px solid gray;
+	border-top: 1px solid gray;
+	border-bottom: 1px solid gray;
+}
+
+.kanban-column:last-of-type {
+	border-right: 1px solid gray;
+}
+
+.kanban-column .kanban-card {
+	margin: 0.5em;
+	padding: 0.5em;
+	border: 1px solid black;
+	background-color: white;
+	border-radius: 5px;
+	box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.kanban-column .kanban-column-title {
+	padding: 1em;
+	border-bottom: 1px solid gray;
+}

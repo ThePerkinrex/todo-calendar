@@ -2,6 +2,7 @@ import { loadTasks } from "../REST/client.js";
 import { getCategory } from "./category.js";
 import { setColorBlock } from "./color.js";
 import { getCourse } from "./course.js";
+import { buildKanban } from "./kanban.js";
 import { getState } from "./state.js";
 import { getTime } from "./time.js";
 
@@ -20,6 +21,10 @@ export async function loadTaskList(filter) {
 		if (b.timeData == null) return 1;
 		return new Date(a.timeData.start) - new Date(b.timeData.start)
 	})
+
+	const kanban = await buildKanban(document.querySelector('.kanban'))
+
+
 	
 	const template = document.getElementById("entry-template");
 	const body = template.parentElement;
@@ -88,5 +93,6 @@ export async function loadTaskList(filter) {
 		}
 
 		body.appendChild(row);
+		kanban.add(task);
 	}
 }

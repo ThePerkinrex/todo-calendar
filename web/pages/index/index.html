@@ -5,6 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>To-dos</title>
 
+	<link rel="stylesheet" href="/lib/tabbed/style.css">
 	<link rel="stylesheet" href="/lib/multiselect/style.css">
 	<script src="/lib/multiselect/lib.js"></script>
 
@@ -37,41 +38,52 @@
 			<button type="submit">Apply</button>
 	</form>
 	<div class="row centered">
-		<table class="tasks">
-			<thead>
-				<tr>
-					<th>ID</th>
-					<th>Name</th>
-					<th>Category</th>
-					<th>Course</th>
-					<th>State</th>
-					<th>Time</th>
-					<th>Parent</th>
-				</tr>
-			</thead>
-			<tbody>
-				<template id="entry-template">
-					<tr>
-						<td class="id"></td>
-						<td class="name">
-							<span class="name-with-blocks">
-							<span class="color-blocks">
-							<div class="state-block color-block"></div>
-							<div class="category-block color-block"></div>
-							<div class="course-block color-block"></div>
-							</span>
-							<span class="name-span"></span>
-							</span>
-						</td>
-						<td class="category"></td>
-						<td class="course"></td>
-						<td class="state"></td>
-						<td class="time"></td>
-						<td class="parent"></td>
-					</tr>
-				</template>
-			</tbody>
-		</table>
+		<div class="tabbed">
+			<div class="tab-titles">
+				<button class="tab-title">Table</button>
+				<button class="tab-title">Kanban</button>
+			</div>
+			<div class="tab">
+				<table class="tasks">
+					<thead>
+						<tr>
+							<th>ID</th>
+							<th>Name</th>
+							<th>Category</th>
+							<th>Course</th>
+							<th>State</th>
+							<th>Time</th>
+							<th>Parent</th>
+						</tr>
+					</thead>
+					<tbody>
+						<template id="entry-template">
+							<tr>
+								<td class="id"></td>
+								<td class="name">
+									<span class="name-with-blocks">
+									<span class="color-blocks">
+									<div class="state-block color-block"></div>
+									<div class="category-block color-block"></div>
+									<div class="course-block color-block"></div>
+									</span>
+									<span class="name-span"></span>
+									</span>
+								</td>
+								<td class="category"></td>
+								<td class="course"></td>
+								<td class="state"></td>
+								<td class="time"></td>
+								<td class="parent"></td>
+							</tr>
+						</template>
+					</tbody>
+				</table>
+			</div>
+			<div class="tab">
+				<div class="kanban"></div>
+			</div>
+		</div>
 	</div>
 	<!-- <details id="data">
 		<summary>Data</summary>
@@ -162,7 +174,9 @@
 	
 	<script type="module">
 		import {start} from '/js/loading.js'
+		import {constructAllTabbed} from '/lib/tabbed/lib.js'
 		start()
+		constructAllTabbed()
 	</script>
 </body>
 </html>
