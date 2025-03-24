@@ -8,7 +8,7 @@ import { loadTime } from "../REST/client.js";
 export async function getTime(id) {
 	if (id === null || id === undefined) return null;
 	let data = await loadTime(id);
-	console.log("Get time", id, data)
+	// console.log("Get time", id, data)
 	return {
 		start: data.start,
 		end: data.end,

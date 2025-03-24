@@ -12,7 +12,7 @@ export function cached(
 		}
 		const now = new Date().getTime();
 		if (data[key] === undefined || data[key].time + staleness < now) {
-			console.log("reloading", data, args, key);
+			// console.log("reloading", data, args, key);
 			data[key] = { data: await fetch(...args), time: now };
 		}
 		return data[key].data;

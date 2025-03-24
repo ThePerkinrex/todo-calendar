@@ -6,8 +6,21 @@ import { getState } from "./state.js";
 import { getTime } from "./time.js";
 
 export async function loadTaskList(filter) {
-	console.log("Loading tasks:", filter);
-	const tasks = await loadTasks(filter);
+	// console.log("Loading tasks:", filter);
+	let tasks = await Promise.all((await loadTasks(filter)).map(async task => {
+		task.timeData = await getTime(task.time);
+		task.courseData = await getCourse(task.course);
+		task.categoryData = await getCategory(task.category);
+		task.stateData = await getState(task.state);
+		return task
+	}));
+
+	tasks = tasks.sort((a, b) => {
+		if (a.timeData == null) return -1;
+		if (b.timeData == null) return 1;
+		return new Date(a.timeData.start) - new Date(b.timeData.start)
+	})
+	
 	const template = document.getElementById("entry-template");
 	const body = template.parentElement;
 
@@ -21,10 +34,10 @@ export async function loadTaskList(filter) {
 	}
 
 	for (const task of tasks) {
-		const course = await getCourse(task.course);
-		const category = await getCategory(task.category);
-		const state = await getState(task.state);
-		const time = await getTime(task.time)
+		const course = task.courseData;
+		const category = task.categoryData;
+		const state = task.stateData;
+		const time = task.timeData;
 
 		const row = template.content.cloneNode(true);
 		setColorBlock(
@@ -51,9 +64,9 @@ export async function loadTaskList(filter) {
 		row.querySelector(".state").innerText = state.name;
 
 		if (time !== null) {
-			console.log("What time: ", time)
+			// console.log("What time: ", time)
 			const start = new Date(time.start)
-			console.log("start: ", start)
+			// console.log("start: ", start)
 			if (time.end !== null) {
 				const end = new Date(time.end)
 				
