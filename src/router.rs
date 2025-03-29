@@ -142,7 +142,9 @@ where
     }
 
     pub fn visit<V: PathVisitor<'a>>(&self, visitor: &mut V) {
-        for (k, v) in &self.paths {
+        let mut sorted_paths = self.paths.iter().collect::<Vec<_>>();
+        sorted_paths.sort_by_key(|(name, _)| *name);
+        for (k, v) in sorted_paths {
             visitor.visit(k.as_ref(), v);
         }
     }

@@ -93,3 +93,19 @@ button[type="submit"]:active {
 	padding: 1em;
 	border-bottom: 1px solid gray;
 }
+
+.kanban-card-name {
+	font-size: 1.2em;
+	font-weight: bold;
+	font-style: normal;
+	color: black;
+}
+
+.kanban-card {
+	font-style: italic;
+	color: darkgray;
+}
+
+.kanban-card-drag {
+	opacity: 0.4;
+}
